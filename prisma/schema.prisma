@@ -1,0 +1,718 @@
+// ToolForge — Prisma schema
+// Mission 2: Database Foundation. Implements PRISMA_SCHEMA_PLAN.md exactly.
+// PostgreSQL (Supabase) · Prisma ORM. No API/auth/CRUD/UI here — data model only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: connection URLs live in `prisma.config.ts` (migrate/introspect) and are
+// supplied to PrismaClient at runtime via a driver adapter (see server/db/prisma.ts).
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS  (aligned to the frozen UI unions)
+// ============================================================================
+
+enum DocumentType {
+  INVOICE
+  QUOTE
+  RECEIPT
+  CREDIT_NOTE
+  SALARY_SLIP
+  PURCHASE_ORDER
+  PROPOSAL
+  DELIVERY_NOTE
+}
+
+enum DocumentStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  ACCEPTED
+  DECLINED
+  VOID
+}
+
+enum ToolKind {
+  DOCUMENT
+  GENERATOR
+  CALCULATOR
+  UTILITY
+}
+
+enum ToolStatus {
+  POPULAR
+  NEW
+  PRO
+}
+
+enum PlanTier {
+  FREE
+  PRO
+  BUSINESS
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  CAD
+  AUD
+  INR
+  JPY
+}
+
+enum TaxType {
+  GST
+  VAT
+  SALES_TAX
+  CUSTOM
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  CASH
+  ONLINE
+  OTHER
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum NotificationCategory {
+  INVOICE
+  PAYMENT
+  SYSTEM
+  TEAM
+}
+
+enum EmailKind {
+  VERIFY
+  RESET
+  INVITE
+  INVOICE_SENT
+  REMINDER
+  RECEIPT
+  PAYMENT_CONFIRMED
+  SYSTEM
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
+}
+
+enum FileKind {
+  LOGO
+  AVATAR
+  INVOICE_PDF
+  DOCUMENT_PDF
+  EXPORT
+  ATTACHMENT
+  QR
+  BARCODE
+}
+
+// ============================================================================
+// IDENTITY & ACCESS  (Auth.js core + 2FA)
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String? // null for OAuth-only users (argon2id)
+  image         String?
+  timezone      String    @default("UTC")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Membership[]
+  twoFactor     TwoFactorSecret?
+  notifications Notification[]
+  createdDocs   Document[]       @relation("DocCreatedBy")
+  auditLogs     AuditLog[]       @relation("AuditActor")
+  toolRuns      ToolRun[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  sessionToken String    @unique
+  userId       String
+  expires      DateTime
+  // --- Server-side session registry (Mission 4) --------------------------
+  // With the Credentials provider, Auth.js uses the JWT strategy; these rows are
+  // the revocation/audit ledger keyed by the JWT `sid` claim. All additive and
+  // defaulted, so the Auth.js Prisma adapter (which only reads/writes
+  // sessionToken/userId/expires) is unaffected.
+  rememberMe   Boolean   @default(false)
+  ip           String?
+  userAgent    String?
+  revokedAt    DateTime?
+  lastActiveAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, revokedAt])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model TwoFactorSecret {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  secret      String
+  enabledAt   DateTime?
+  createdAt   DateTime     @default(now())
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backupCodes BackupCode[]
+}
+
+model BackupCode {
+  id       String          @id @default(cuid())
+  twoFaId  String
+  codeHash String
+  usedAt   DateTime?
+  twoFa    TwoFactorSecret @relation(fields: [twoFaId], references: [id], onDelete: Cascade)
+
+  @@index([twoFaId])
+}
+
+// ============================================================================
+// TENANCY & BILLING
+// ============================================================================
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  settings      WorkspaceSettings?
+  subscription  Subscription?
+  memberships   Membership[]
+  invitations   Invitation[]
+  documents     Document[]
+  clients       Client[]
+  products      Product[]
+  templates     TemplateAsset[]
+  sequences     DocumentSequence[]
+  toolRuns      ToolRun[]
+  toolPins      WorkspaceToolPin[]
+  files         FileObject[]
+  payments      Payment[]
+  emails        EmailMessage[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  activity      ActivityEvent[]
+
+  @@index([deletedAt])
+}
+
+model WorkspaceSettings {
+  id                String    @id @default(cuid())
+  workspaceId       String    @unique
+  legalName         String?
+  businessType      String?
+  email             String?
+  phone             String?
+  address           Json?
+  defaultCurrency   Currency  @default(USD)
+  taxRegion         String?
+  defaultTaxType    TaxType?
+  taxId             String?
+  brandColor        String?   @default("#3b82f6")
+  logoFileId        String?
+  numberFormat      String    @default("INV-{YYYY}-{SEQ}")
+  defaultTemplateId String?
+  onboardedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Membership {
+  id          String       @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        Role         @default(MEMBER)
+  status      MemberStatus @default(ACTIVE)
+  joinedAt    DateTime     @default(now())
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId, role])
+}
+
+model Invitation {
+  id          String       @id @default(cuid())
+  workspaceId String
+  email       String
+  role        Role         @default(MEMBER)
+  token       String       @unique
+  status      InviteStatus @default(PENDING)
+  invitedById String?
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  tier          PlanTier       @unique
+  name          String
+  priceMonthly  Decimal        @db.Decimal(10, 2)
+  priceAnnual   Decimal        @db.Decimal(10, 2)
+  entitlements  Json
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                 String           @id @default(cuid())
+  workspaceId        String           @unique
+  planId             String
+  planTier           PlanTier         @default(FREE)
+  status             String           @default("active")
+  provider           PaymentProvider?
+  providerRef        String?
+  currentPeriodEnd   DateTime?
+  docsUsedThisPeriod Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  workspace          Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan               Plan             @relation(fields: [planId], references: [id])
+
+  @@index([planId])
+}
+
+// ============================================================================
+// TOOL REGISTRY
+// ============================================================================
+
+model ToolCategory {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  icon        String
+  sortWeight  Int    @default(0)
+  tools       Tool[]
+}
+
+model Tool {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  tagline     String
+  description String
+  categoryId  String
+  kind        ToolKind
+  outputType  DocumentType?
+  status      ToolStatus?
+  minPlan     PlanTier      @default(FREE)
+  schemaKey   String
+  featured    Boolean       @default(false)
+  isActive    Boolean       @default(true)
+  addedAt     DateTime      @default(now())
+  sortWeight  Int           @default(0)
+
+  category  ToolCategory       @relation(fields: [categoryId], references: [id])
+  documents Document[]
+  toolRuns  ToolRun[]
+  pins      WorkspaceToolPin[]
+
+  @@index([categoryId, isActive])
+}
+
+model WorkspaceToolPin {
+  id          String    @id @default(cuid())
+  workspaceId String
+  toolId      String
+  pinnedAt    DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tool        Tool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, toolId])
+  @@index([toolId])
+}
+
+model ToolRun {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  toolId       String
+  userId       String?
+  input        Json
+  output       Json
+  resultFileId String?
+  createdAt    DateTime  @default(now())
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tool         Tool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, toolId, createdAt])
+}
+
+// ============================================================================
+// DOCUMENTS (polymorphic core) + business records
+// ============================================================================
+
+model Document {
+  id          String         @id @default(cuid())
+  workspaceId String
+  toolId      String
+  type        DocumentType
+  number      String
+  status      DocumentStatus @default(DRAFT)
+
+  issueDate DateTime
+  dueDate   DateTime?
+  currency  Currency  @default(USD)
+
+  issuer    Json
+  recipient Json
+  clientId  String?
+
+  taxConfig Json
+  discount  Json
+  shipping  Json
+
+  subtotal   Decimal @default(0) @db.Decimal(14, 2)
+  taxTotal   Decimal @default(0) @db.Decimal(14, 2)
+  total      Decimal @default(0) @db.Decimal(14, 2)
+  amountPaid Decimal @default(0) @db.Decimal(14, 2)
+
+  branding   Json?
+  templateId String?
+
+  notes               String?
+  terms               String?
+  paymentInstructions String?
+  bankDetails         Json?
+
+  payload Json?
+
+  pdfFileId   String?
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tool      Tool                @relation(fields: [toolId], references: [id], onDelete: Restrict)
+  client    Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  template  TemplateAsset?      @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  pdfFile   FileObject?         @relation("DocPdf", fields: [pdfFileId], references: [id], onDelete: SetNull)
+  createdBy User?               @relation("DocCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  items     DocumentItem[]
+  payments  PaymentAllocation[]
+  shares    DocumentShare[]
+
+  @@unique([workspaceId, number])
+  @@index([workspaceId, type, status])
+  @@index([workspaceId, clientId])
+  @@index([workspaceId, issueDate])
+  @@index([deletedAt])
+}
+
+model DocumentItem {
+  id          String   @id @default(cuid())
+  documentId  String
+  productId   String?
+  description String
+  quantity    Decimal  @db.Decimal(14, 3)
+  rate        Decimal  @db.Decimal(14, 2)
+  unit        String?
+  taxRate     Decimal  @default(0) @db.Decimal(6, 3)
+  amount      Decimal  @db.Decimal(14, 2)
+  position    Int      @default(0)
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([documentId])
+  @@index([productId])
+}
+
+model DocumentSequence {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  documentType DocumentType
+  prefix       String       @default("INV")
+  period       String
+  nextValue    Int          @default(1)
+  padding      Int          @default(3)
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, documentType, period])
+}
+
+model DocumentShare {
+  id         String    @id @default(cuid())
+  documentId String
+  token      String    @unique
+  expiresAt  DateTime?
+  viewCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  document   Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+model Client {
+  id          String     @id @default(cuid())
+  workspaceId String
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  taxId       String?
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  documents   Document[]
+
+  @@unique([workspaceId, email])
+  @@index([workspaceId, status])
+  @@index([deletedAt])
+}
+
+model Product {
+  id          String         @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  price       Decimal        @db.Decimal(14, 2)
+  sku         String
+  category    String?
+  quantity    Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  items       DocumentItem[]
+
+  @@unique([workspaceId, sku])
+  @@index([deletedAt])
+}
+
+model TemplateAsset {
+  id          String     @id @default(cuid())
+  workspaceId String?
+  key         String
+  name        String
+  description String?
+  colors      Json
+  isSystem    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  documents   Document[]
+
+  @@unique([workspaceId, key])
+}
+
+// ============================================================================
+// MONEY MOVEMENT
+// ============================================================================
+
+model Payment {
+  id             String              @id @default(cuid())
+  workspaceId    String
+  amount         Decimal             @db.Decimal(14, 2)
+  currency       Currency
+  method         PaymentMethod
+  provider       PaymentProvider     @default(MANUAL)
+  providerRef    String?
+  status         PaymentStatus       @default(SUCCEEDED)
+  idempotencyKey String              @unique
+  refundOfId     String?
+  receivedAt     DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  refundOf       Payment?            @relation("Refunds", fields: [refundOfId], references: [id], onDelete: SetNull)
+  refunds        Payment[]           @relation("Refunds")
+  allocations    PaymentAllocation[]
+
+  @@index([workspaceId, status])
+  @@index([refundOfId])
+}
+
+model PaymentAllocation {
+  id         String   @id @default(cuid())
+  paymentId  String
+  documentId String
+  amount     Decimal  @db.Decimal(14, 2)
+  payment    Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, documentId])
+  @@index([documentId])
+}
+
+// ============================================================================
+// FILES, COMMS, OBSERVABILITY
+// ============================================================================
+
+model FileObject {
+  id          String     @id @default(cuid())
+  workspaceId String
+  kind        FileKind
+  bucket      String
+  path        String
+  mimeType    String
+  sizeBytes   Int
+  checksum    String?
+  createdById String?
+  createdAt   DateTime   @default(now())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  docPdfs     Document[] @relation("DocPdf")
+
+  @@index([workspaceId, kind])
+}
+
+model EmailMessage {
+  id                String      @id @default(cuid())
+  workspaceId       String?
+  toEmail           String
+  kind              EmailKind
+  templateKey       String
+  relatedType       String?
+  relatedId         String?
+  provider          String?
+  providerMessageId String?
+  status            EmailStatus @default(QUEUED)
+  sentAt            DateTime?
+  openedAt          DateTime?
+  createdAt         DateTime    @default(now())
+  workspace         Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, kind])
+}
+
+model Notification {
+  id              String               @id @default(cuid())
+  workspaceId     String
+  recipientUserId String
+  category        NotificationCategory
+  title           String
+  body            String
+  relatedType     String?
+  relatedId       String?
+  channelsSent    String[]
+  seenAt          DateTime?
+  readAt          DateTime?
+  createdAt       DateTime             @default(now())
+  workspace       Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recipient       User                 @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt])
+  @@index([workspaceId, category])
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  workspaceId String
+  actorId     String?
+  action      String
+  targetType  String
+  targetId    String
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor       User?     @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ActivityEvent {
+  id          String    @id @default(cuid())
+  workspaceId String
+  actorLabel  String
+  verb        String
+  summary     String
+  relatedType String?
+  relatedId   String?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([relatedType, relatedId])
+}
