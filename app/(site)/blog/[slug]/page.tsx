@@ -1,136 +1,144 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { Breadcrumbs } from '@/components/site/breadcrumbs'
-import { blogPosts, getPost, relatedPosts } from '@/lib/site-data'
+import { Newsletter } from '@/components/site/newsletter'
+import { JsonLd } from '@/components/seo/json-ld'
+import { BlogService } from '@/server/services/blog.service'
+import { renderMarkdown } from '@/lib/blog-markdown'
+import { buildMetadata, articleSchema, breadcrumbSchema, absoluteUrl } from '@/lib/seo'
 
-export function generateStaticParams() {
-  return blogPosts.map((p) => ({ slug: p.slug }))
+// ISR: cache each article and revalidate periodically. This serves published posts from the
+// edge/cache instead of hitting the database on every request — far less DB load, faster, and
+// resilient to a brief database blip (a cached article keeps serving). New/updated posts appear
+// within the revalidate window.
+export const revalidate = 600
+
+function fmt(iso: string | null) {
+  return iso ? new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const post = getPost(slug)
-  if (!post) return { title: 'Article — ToolForge' }
-  return { title: `${post.title} — ToolForge Blog`, description: post.excerpt }
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+  const data = await new BlogService().getPublished(slug).catch(() => null)
+  if (!data) return { title: 'Article' }
+  const { post } = data
+  const meta = buildMetadata({
+    title: post.metaTitle || post.title,
+    description: post.metaDescription || post.excerpt || `Read “${post.title}” on the Bill Maker blog.`,
+    path: `/blog/${post.slug}`,
+    type: 'article',
+    keywords: post.tags,
   })
+  if (post.canonicalUrl) meta.alternates = { canonical: post.canonicalUrl }
+  if (post.coverImage && meta.openGraph) meta.openGraph.images = [{ url: post.coverImage, alt: post.coverAlt || post.title }]
+  return meta
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getPost(slug)
-  if (!post) notFound()
-
-  const related = relatedPosts(post, 3)
+  const data = await new BlogService().getPublished(slug)
+  if (!data) notFound()
+  const { post, related, prev, next } = data
+  const html = renderMarkdown(post.content)
+  const shareUrl = absoluteUrl(`/blog/${post.slug}`)
 
   return (
     <>
+      <JsonLd
+        data={articleSchema({
+          title: post.title,
+          description: post.metaDescription || post.excerpt || post.title,
+          path: `/blog/${post.slug}`,
+          datePublished: post.publishedAt || post.createdAt,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Blog', path: '/blog' },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
+
       <div className="border-b border-border bg-secondary/30">
         <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Blog', href: '/blog' },
-              { label: post.title },
-            ]}
-          />
-          <span className="mt-8 inline-flex items-center rounded-full bg-brand-muted px-2.5 py-1 text-xs font-medium text-brand">
-            {post.category}
-          </span>
-          <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.025em] text-foreground lg:text-5xl">
+          <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: post.title }]} />
+          <p className="mt-8 text-xs font-medium uppercase tracking-wide text-brand">{post.category}</p>
+          <h1 className="mt-3 text-balance text-4xl font-semibold tracking-[-0.025em] text-foreground lg:text-5xl">
             {post.title}
           </h1>
-          <div className="mt-6 flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground">
-              {post.author.initials}
-            </span>
-            <div className="text-sm">
-              <p className="font-semibold text-foreground">{post.author.name}</p>
-              <p className="text-muted-foreground">
-                {formatDate(post.date)} · {post.readingTime} min read
-              </p>
-            </div>
+          {post.excerpt && <p className="mt-4 text-pretty text-lg leading-relaxed text-muted-foreground">{post.excerpt}</p>}
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{post.authorName}</span>
+            <span aria-hidden>·</span>
+            <span>{fmt(post.publishedAt)}</span>
+            <span aria-hidden>·</span>
+            <span className="inline-flex items-center gap-1"><Clock className="size-3.5" /> {post.readingMinutes} min read</span>
           </div>
         </div>
       </div>
 
-      <article className="mx-auto max-w-3xl px-6 py-14 lg:py-16">
-        <p className="text-pretty text-xl leading-relaxed text-foreground">{post.excerpt}</p>
-        <div className="mt-8 space-y-8">
-          {post.content.map((block, i) => (
-            <section key={i} className="space-y-4">
-              {block.heading && (
-                <h2 className="text-2xl font-semibold tracking-[-0.01em] text-foreground">
-                  {block.heading}
-                </h2>
-              )}
-              {block.paragraphs.map((p, j) => (
-                <p key={j} className="text-pretty leading-relaxed text-muted-foreground">
-                  {p}
-                </p>
-              ))}
-            </section>
-          ))}
+      <article className="mx-auto max-w-3xl px-6 py-14">
+        {post.coverImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.coverImage} alt={post.coverAlt || post.title} className="mb-10 w-full rounded-2xl border border-border object-cover" />
+        )}
+        <div className="blog-content" dangerouslySetInnerHTML={{ __html: html }} />
+
+        {post.tags.length > 0 && (
+          <div className="mt-10 flex flex-wrap gap-2">
+            {post.tags.map((t) => (
+              <Link key={t} href={`/blog?tag=${encodeURIComponent(t)}`} className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:text-foreground">
+                #{t}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-10 flex items-center gap-3 border-t border-border pt-6">
+          <span className="text-sm font-medium text-foreground">Share:</span>
+          <a className="text-sm text-brand hover:underline" target="_blank" rel="noopener" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(shareUrl)}`}>X</a>
+          <a className="text-sm text-brand hover:underline" target="_blank" rel="noopener" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}>LinkedIn</a>
+          <a className="text-sm text-brand hover:underline" target="_blank" rel="noopener" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}>Facebook</a>
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            All articles
-          </Link>
-          <Link
-            href="/tools/invoice-generator"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-token-sm transition-colors hover:bg-primary/90"
-          >
-            Try ToolForge free
-            <ArrowRight className="size-4" />
-          </Link>
-        </div>
+        {(prev || next) && (
+          <nav className="mt-10 grid gap-4 sm:grid-cols-2" aria-label="More articles">
+            {prev ? (
+              <Link href={`/blog/${prev.slug}`} className="rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><ArrowLeft className="size-3" /> Previous</span>
+                <p className="mt-1 font-medium text-foreground">{prev.title}</p>
+              </Link>
+            ) : <span />}
+            {next && (
+              <Link href={`/blog/${next.slug}`} className="rounded-xl border border-border bg-card p-5 text-right transition-colors hover:bg-muted">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">Next <ArrowRight className="size-3" /></span>
+                <p className="mt-1 font-medium text-foreground">{next.title}</p>
+              </Link>
+            )}
+          </nav>
+        )}
       </article>
 
       {related.length > 0 && (
         <section className="border-t border-border bg-secondary/30">
           <div className="mx-auto max-w-6xl px-6 py-16">
-            <h2 className="text-lg font-semibold tracking-[-0.01em] text-foreground">
-              Keep reading
-            </h2>
-            <div className="mt-6 grid gap-6 md:grid-cols-3">
-              {related.map((p) => (
-                <Link
-                  key={p.slug}
-                  href={`/blog/${p.slug}`}
-                  className="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-token-xs transition-all hover:-translate-y-0.5 hover:shadow-token-md"
-                >
-                  <span className="text-xs font-medium uppercase tracking-[0.08em] text-brand">
-                    {p.category}
-                  </span>
-                  <h3 className="mt-2 text-pretty font-semibold leading-snug tracking-[-0.01em] text-foreground">
-                    {p.title}
-                  </h3>
-                  <span className="mt-auto pt-4 text-xs text-muted-foreground">
-                    {p.readingTime} min read
-                  </span>
+            <h2 className="text-2xl font-semibold tracking-[-0.02em] text-foreground">Related articles</h2>
+            <div className="mt-8 grid gap-6 sm:grid-cols-3">
+              {related.map((r) => (
+                <Link key={r.id} href={`/blog/${r.slug}`} className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:shadow-token-md">
+                  <p className="text-xs font-medium uppercase tracking-wide text-brand">{r.category}</p>
+                  <h3 className="mt-2 text-pretty font-semibold leading-snug text-foreground group-hover:underline">{r.title}</h3>
+                  <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock className="size-3" /> {r.readingMinutes} min</p>
                 </Link>
               ))}
             </div>
           </div>
         </section>
       )}
+      <Newsletter />
     </>
   )
 }

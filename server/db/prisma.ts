@@ -24,7 +24,19 @@ export type DbClient = Prisma.TransactionClient
 function createPrismaClient(): PrismaClient {
   const env = getEnv()
 
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
+  // Pool configuration tuned for the Supabase transaction pooler. Without these, a connection
+  // the pooler has already dropped can hang a query indefinitely (observed: a request stuck for
+  // ~71 minutes before P1001). These make a dead/slow connection fail FAST so the retry wrapper
+  // (server/db/retry.ts) can grab a fresh one — turning a hard outage into a sub-second recovery.
+  const adapter = new PrismaPg({
+    connectionString: env.DATABASE_URL,
+    max: 10, // pool size for the pooler
+    connectionTimeoutMillis: 10_000, // give up acquiring a connection after 10s (don't hang)
+    idleTimeoutMillis: 10_000, // evict idle connections before the pooler silently drops them
+    keepAlive: true, // TCP keep-alive so dead sockets are detected promptly
+    statement_timeout: 20_000, // server-side: kill a query stuck for >20s
+    query_timeout: 20_000, // client-side query timeout (belt-and-braces)
+  })
 
   const client = new PrismaClient({
     adapter,
@@ -49,12 +61,12 @@ function createPrismaClient(): PrismaClient {
 
 type PrismaSingleton = ReturnType<typeof createPrismaClient>
 
-const globalForPrisma = globalThis as unknown as { __toolforgePrisma?: PrismaSingleton }
+const globalForPrisma = globalThis as unknown as { __billmakerPrisma?: PrismaSingleton }
 
-export const prisma: PrismaSingleton = globalForPrisma.__toolforgePrisma ?? createPrismaClient()
+export const prisma: PrismaSingleton = globalForPrisma.__billmakerPrisma ?? createPrismaClient()
 
 if (getEnv().NODE_ENV !== 'production') {
-  globalForPrisma.__toolforgePrisma = prisma
+  globalForPrisma.__billmakerPrisma = prisma
 }
 
 /** Gracefully close the connection pool (scripts, tests, graceful shutdown). */

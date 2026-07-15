@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { LegalPage, type LegalSection } from '@/components/site/legal-page'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — ToolForge',
-  description: 'How ToolForge collects, uses, and protects your personal and business data.',
+  title: 'Privacy Policy — Bill Maker',
+  description: 'How Bill Maker collects, uses, and protects your personal and business data.',
 }
 
 const sections: LegalSection[] = [
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy Policy"
       updated="October 1, 2024"
-      intro="Your trust matters to us. This policy explains what data ToolForge collects, how we use it, and the choices you have — in plain language."
+      intro="Your trust matters to us. This policy explains what data Bill Maker collects, how we use it, and the choices you have — in plain language."
       sections={sections}
     />
   )

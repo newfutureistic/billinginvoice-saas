@@ -19,17 +19,14 @@ const templates: Template[] = [
   { name: 'Minimal Invoice', style: 'Whitespace-forward', type: 'Invoices', accent: 'oklch(0.26 0.017 268)', variant: 1 },
   { name: 'Modern Invoice', style: 'Bold and confident', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2 },
   { name: 'Corporate Invoice', style: 'Formal and structured', type: 'Invoices', accent: 'oklch(0.72 0.135 74)', variant: 0 },
-  { name: 'Simple Quote', style: 'Fast to approve', type: 'Quotes', accent: 'oklch(0.545 0.152 258)', variant: 1 },
-  { name: 'Detailed Estimate', style: 'Line-by-line clarity', type: 'Quotes', accent: 'oklch(0.26 0.017 268)', variant: 2, badge: 'New' },
+  { name: 'GST Invoice', style: 'Tax-ready with HSN/SAC', type: 'Invoices', accent: 'oklch(0.545 0.152 258)', variant: 1, badge: 'New' },
+  { name: 'Freelancer Invoice', style: 'Simple and fast', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2 },
   { name: 'Service Receipt', style: 'Clean confirmation', type: 'Receipts', accent: 'oklch(0.58 0.12 158)', variant: 1 },
   { name: 'Retail Receipt', style: 'Compact and itemized', type: 'Receipts', accent: 'oklch(0.72 0.135 74)', variant: 0 },
-  { name: 'Service Contract', style: 'Ready to sign', type: 'Contracts', accent: 'oklch(0.26 0.017 268)', variant: 2 },
-  { name: 'Freelance Agreement', style: 'Balanced terms', type: 'Contracts', accent: 'oklch(0.545 0.152 258)', variant: 0 },
-  { name: 'Project Proposal', style: 'Persuasive layout', type: 'Proposals', accent: 'oklch(0.58 0.12 158)', variant: 2, badge: 'New' },
-  { name: 'Retainer Proposal', style: 'Recurring scope', type: 'Proposals', accent: 'oklch(0.72 0.135 74)', variant: 1 },
+  { name: 'Payment Receipt', style: 'Proof of payment', type: 'Receipts', accent: 'oklch(0.26 0.017 268)', variant: 2 },
 ]
 
-const types = ['All', 'Invoices', 'Quotes', 'Receipts', 'Contracts', 'Proposals']
+const types = ['All', 'Invoices', 'Receipts']
 
 function TemplateThumb({ accent, variant }: { accent: string; variant: number }) {
   const centered = variant === 1
@@ -102,7 +99,7 @@ export function TemplatesGallery() {
         {filtered.map((t) => (
           <Link
             key={t.name}
-            href="/tools/invoice-generator"
+            href="/invoice/new"
             className="group focus-visible:outline-none"
           >
             <div className="relative transition-transform duration-300 group-hover:-translate-y-1">

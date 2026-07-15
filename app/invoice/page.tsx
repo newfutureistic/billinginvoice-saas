@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Plus } from 'lucide-react'
+import { JsonLd } from '@/components/seo/json-ld'
+import { webApplicationSchema } from '@/lib/seo'
 
 export default function InvoiceHubPage() {
   const recentInvoices = [
@@ -9,6 +11,7 @@ export default function InvoiceHubPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={webApplicationSchema()} />
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-6xl mx-auto px-6 py-8">

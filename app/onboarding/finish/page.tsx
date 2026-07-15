@@ -11,7 +11,7 @@ export default function FinishPage() {
       step={7}
       totalSteps={7}
       title="You're all set!"
-      subtitle="Your ToolForge account is ready to use"
+      subtitle="Your Bill Maker account is ready to use"
       onNext={() => router.push('/dashboard')}
       nextText="Go to dashboard"
     >

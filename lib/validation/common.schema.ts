@@ -7,7 +7,21 @@ import { z } from 'zod'
  */
 
 // --- Enum value tuples (mirror the Prisma enums) ----------------------------
-export const currencyValues = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'INR', 'JPY'] as const
+export const currencyValues = [
+  'USD',
+  'EUR',
+  'GBP',
+  'CAD',
+  'AUD',
+  'INR',
+  'JPY',
+  'AED',
+  'SGD',
+  'CHF',
+  'NZD',
+  'SAR',
+  'QAR',
+] as const
 export const taxTypeValues = ['GST', 'VAT', 'SALES_TAX', 'CUSTOM'] as const
 export const planTierValues = ['FREE', 'PRO', 'BUSINESS'] as const
 export const roleValues = ['OWNER', 'ADMIN', 'MANAGER', 'MEMBER', 'VIEWER'] as const
@@ -15,7 +29,7 @@ export const documentTypeValues = [
   'INVOICE', 'QUOTE', 'RECEIPT', 'CREDIT_NOTE', 'SALARY_SLIP', 'PURCHASE_ORDER', 'PROPOSAL', 'DELIVERY_NOTE',
 ] as const
 export const documentStatusValues = ['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'ACCEPTED', 'DECLINED', 'VOID'] as const
-export const paymentMethodValues = ['CARD', 'BANK_TRANSFER', 'CASH', 'ONLINE', 'OTHER'] as const
+export const paymentMethodValues = ['CARD', 'BANK_TRANSFER', 'CASH', 'ONLINE', 'OTHER', 'UPI', 'CHEQUE', 'WALLET', 'NEFT_RTGS'] as const
 export const paymentProviderValues = ['STRIPE', 'RAZORPAY', 'MANUAL'] as const
 export const notificationCategoryValues = ['INVOICE', 'PAYMENT', 'SYSTEM', 'TEAM'] as const
 export const fileKindValues = [

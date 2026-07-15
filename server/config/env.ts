@@ -148,3 +148,59 @@ export const isGithubEnabled = () => {
   const e = getAuthEnv()
   return Boolean(e.GITHUB_CLIENT_ID && e.GITHUB_CLIENT_SECRET)
 }
+
+// ============================================================================
+// Storage + Email integrations (Mission 7)
+// ============================================================================
+// All optional so typecheck/build/test (which never execute this) are unaffected and
+// the app boots without them — storage/email simply report "not configured" until set.
+
+const IntegrationsEnvSchema = z.object({
+  // Supabase Storage (reuses the Supabase project already hosting the DB)
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  STORAGE_BUCKET: z.string().min(1).default('files'),
+  STORAGE_PUBLIC_BUCKET: z.string().min(1).default('public-assets'),
+  SIGNED_URL_TTL_SEC: z.coerce.number().int().min(30).max(86_400).default(300),
+  // Resend email
+  RESEND_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(1).default('Bill Maker <onboarding@resend.dev>'),
+  EMAIL_REPLY_TO: z.string().email().optional(),
+  // Razorpay payment gateway
+  RAZORPAY_KEY_ID: z.string().min(1).optional(),
+  RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
+  // Public app URL for links inside emails/PDFs (falls back to AUTH_URL)
+  APP_URL: z.string().url().optional(),
+})
+
+export type IntegrationsEnv = z.infer<typeof IntegrationsEnvSchema>
+
+let cachedIntegrations: IntegrationsEnv | null = null
+
+export function getIntegrationsEnv(): IntegrationsEnv {
+  if (cachedIntegrations) return cachedIntegrations
+  const parsed = IntegrationsEnvSchema.safeParse(process.env)
+  cachedIntegrations = parsed.success ? parsed.data : IntegrationsEnvSchema.parse({})
+  return cachedIntegrations
+}
+
+/** True when Supabase Storage is fully configured (URL + a key). */
+export const isStorageEnabled = () => {
+  const e = getIntegrationsEnv()
+  return Boolean(e.SUPABASE_URL && (e.SUPABASE_SERVICE_ROLE_KEY || e.SUPABASE_ANON_KEY))
+}
+
+/** True when Resend email is configured. */
+export const isEmailEnabled = () => Boolean(getIntegrationsEnv().RESEND_API_KEY)
+
+/** True when the Razorpay gateway is configured (key id + secret). */
+export const isRazorpayEnabled = () => {
+  const e = getIntegrationsEnv()
+  return Boolean(e.RAZORPAY_KEY_ID && e.RAZORPAY_KEY_SECRET)
+}
+
+/** Public base URL for links in emails/PDFs. */
+export const getAppUrl = () =>
+  getIntegrationsEnv().APP_URL ?? getAuthEnv().AUTH_URL ?? 'http://localhost:3000'

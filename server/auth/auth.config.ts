@@ -10,8 +10,14 @@ import type { NextAuthConfig } from 'next-auth'
  * (Node runtime).
  */
 
-/** Route classes mirror `ROUTE_MAP.md` — only these prefixes require a session. */
-const PROTECTED_PREFIXES = ['/dashboard', '/invoice', '/onboarding'] as const
+/**
+ * Route classes — only these prefixes require a session. `/invoice/*` is intentionally
+ * public: it is the "try it free — no account required" tool experience (the frozen tool
+ * pages advertise exactly that), and the builder runs on local state; saving/exporting
+ * still goes through the authenticated `/api/v1` layer. Authenticated invoice management
+ * lives under `/dashboard/*`.
+ */
+const PROTECTED_PREFIXES = ['/dashboard', '/onboarding'] as const
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))

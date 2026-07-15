@@ -104,6 +104,14 @@ export function Step2Client({
             placeholder="98-7654321"
           />
         </FormField>
+
+        <FormField label="GSTIN">
+          <Input
+            value={client.gstin ?? ''}
+            onChange={(e) => handleChange('gstin', e.target.value)}
+            placeholder="27FGHIJ5678K1Z3"
+          />
+        </FormField>
       </div>
     </div>
   )

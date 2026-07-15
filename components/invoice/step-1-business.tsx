@@ -105,6 +105,30 @@ export function Step1Business({
           />
         </FormField>
 
+        <FormField label="GSTIN">
+          <Input
+            value={business.gstin ?? ''}
+            onChange={(e) => handleChange('gstin', e.target.value)}
+            placeholder="29ABCDE1234F1Z5"
+          />
+        </FormField>
+
+        <FormField label="PAN">
+          <Input
+            value={business.pan ?? ''}
+            onChange={(e) => handleChange('pan', e.target.value)}
+            placeholder="ABCDE1234F"
+          />
+        </FormField>
+
+        <FormField label="Website">
+          <Input
+            value={business.website ?? ''}
+            onChange={(e) => handleChange('website', e.target.value)}
+            placeholder="https://yourcompany.com"
+          />
+        </FormField>
+
         <FormField label="Business Type">
           <Input
             value={business.businessType}

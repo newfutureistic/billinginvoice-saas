@@ -1,21 +1,22 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Mail, MessageCircle, BookOpen, MapPin } from 'lucide-react'
 import { PageHero } from '@/components/site/page-hero'
 import { ContactForm } from '@/components/site/contact-form'
 
 export const metadata: Metadata = {
-  title: 'Contact — ToolForge',
+  title: 'Contact — Bill Maker',
   description:
-    'Get in touch with the ToolForge team. Sales, support, billing, and partnership inquiries welcome.',
+    'Get in touch with the Bill Maker team. Sales, support, billing, and partnership inquiries welcome.',
 }
 
 const channels = [
   {
     icon: Mail,
     title: 'Email us',
-    description: 'hello@toolforge.com',
-    href: 'mailto:hello@toolforge.com',
+    description: 'hello@bill-maker.com',
+    href: 'mailto:hello@bill-maker.com',
     cta: 'Send an email',
   },
   {
@@ -81,6 +82,18 @@ export default function ContactPage() {
                 <br />
                 San Francisco, CA 94103
               </p>
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <Image
+                src="/contact.png"
+                alt=""
+                aria-hidden
+                width={2000}
+                height={2000}
+                sizes="(min-width: 1024px) 400px, 80vw"
+                className="h-auto w-full max-w-sm object-contain"
+              />
             </div>
           </div>
 

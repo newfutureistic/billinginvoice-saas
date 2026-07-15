@@ -53,6 +53,8 @@ export type Permission =
   // observability / settings
   | 'audit:read'
   | 'settings:manage'
+  // blog CMS (admin-only, site-global)
+  | 'blog:manage'
 
 /** Base actions that resolve to `:any` / `:own` scopes (ownership-sensitive). */
 export type OwnableAction =
@@ -129,6 +131,7 @@ const ADMIN_PERMISSIONS: Permission[] = [
   'member:remove',
   'audit:read',
   'settings:manage',
+  'blog:manage',
 ]
 
 const OWNER_PERMISSIONS: Permission[] = [

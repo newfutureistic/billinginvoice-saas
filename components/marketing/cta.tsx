@@ -21,12 +21,12 @@ export function Cta() {
             Your next invoice is a minute away
           </h2>
           <p className="mt-4 text-pretty text-lg leading-relaxed text-primary-foreground/70">
-            Join 12,000+ businesses billing smarter with ToolForge. No credit card required to
-            start.
+            Create a professional, GST-ready invoice with Bill Maker. No signup needed to start,
+            and no credit card — ever.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
-              href="/tools/invoice-generator"
+              href="/invoice/new"
               className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-background px-6 text-[0.95rem] font-medium text-foreground shadow-token-md transition-transform hover:-translate-y-0.5"
             >
               Create your invoice

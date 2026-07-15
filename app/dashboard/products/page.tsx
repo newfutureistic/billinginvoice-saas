@@ -1,10 +1,19 @@
 'use client'
 
-import { mockProducts } from '@/lib/dashboard-data'
-import { DataTable } from '@/components/dashboard/dashboard-cards'
-import { Plus, Search } from 'lucide-react'
+import { useState } from 'react'
+import { useProducts } from '@/lib/api/hooks/use-products'
+import { DataTable, EmptyState } from '@/components/dashboard/dashboard-cards'
+import { Plus, Search, Package } from 'lucide-react'
 
 export default function ProductsPage() {
+  const [search, setSearch] = useState('')
+  const { data, isPending, isError } = useProducts()
+  const all = data?.items ?? []
+  const q = search.trim().toLowerCase()
+  const products = q
+    ? all.filter((p) => [p.name, p.sku, p.category, p.description].some((f) => f?.toLowerCase().includes(q)))
+    : all
+
   return (
     <div className="space-y-6 p-6 sm:p-8">
       <div className="flex items-center justify-between">
@@ -24,30 +33,41 @@ export default function ProductsPage() {
             <Search className="size-4 text-muted-foreground" />
             <input
               type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search products..."
               className="flex-1 bg-transparent outline-none text-sm"
             />
           </div>
         </div>
 
-        <DataTable
-          columns={[
-            { key: 'name', label: 'Product' },
-            { key: 'description', label: 'Description' },
-            {
-              key: 'price',
-              label: 'Price',
-              render: (value) => `$${value}`,
-            },
-            {
-              key: 'quantity',
-              label: 'Quantity',
-            },
-            { key: 'sku', label: 'SKU' },
-            { key: 'category', label: 'Category' },
-          ]}
-          data={mockProducts}
-        />
+        {isPending ? (
+          <div className="p-4 space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-12 animate-pulse rounded-lg bg-muted/40" />
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="p-8 text-center text-sm text-destructive">Could not load products.</div>
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={<Package className="size-8" />}
+            title={q ? 'No matching products' : 'No products yet'}
+            description={q ? 'Try a different search.' : 'Your products will appear here once you add them.'}
+          />
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'name', label: 'Product' },
+              { key: 'description', label: 'Description', render: (v) => (v as string) || '—' },
+              { key: 'price', label: 'Price', render: (value) => `$${value}` },
+              { key: 'quantity', label: 'Quantity' },
+              { key: 'sku', label: 'SKU' },
+              { key: 'category', label: 'Category', render: (v) => (v as string) || '—' },
+            ]}
+            data={products}
+          />
+        )}
       </div>
     </div>
   )

@@ -62,6 +62,8 @@ export {
   type NotificationFilter,
   type NotificationCreateData,
 } from '@/server/repositories/notification.repository'
+export { FileRepository, type FileCreateData } from '@/server/repositories/file.repository'
+export { EmailRepository, type EmailCreateData } from '@/server/repositories/email.repository'
 export {
   type DocumentItemCreateData,
   type DocumentWithItems,

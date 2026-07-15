@@ -45,7 +45,24 @@ const credentialsProvider = Credentials({
     ctx.ip = clientIp(request)
     ctx.userAgent = request?.headers.get('user-agent') ?? undefined
 
-    const identity = await new AuthService(ctx).authenticate(parsed.data.email, parsed.data.password)
+    // A wrong password makes `authenticate` return null (never retried). A thrown error means
+    // the database was unreachable (e.g. a transient Supabase pooler blip) — retry a couple of
+    // times so a brief outage doesn't get shown to the user as "incorrect password". If it still
+    // fails, the error propagates (surfaced to the client as a service error, not a bad login).
+    const svc = new AuthService(ctx)
+    let identity: Awaited<ReturnType<typeof svc.authenticate>> | null = null
+    let lastErr: unknown
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        identity = await svc.authenticate(parsed.data.email, parsed.data.password)
+        lastErr = undefined
+        break
+      } catch (err) {
+        lastErr = err
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
+      }
+    }
+    if (lastErr) throw lastErr
     if (!identity) return null
 
     return {

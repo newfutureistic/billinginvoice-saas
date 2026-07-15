@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import type { DashboardKPI } from '@/lib/dashboard-data'
 
@@ -66,12 +67,19 @@ export function EmptyState({
   }
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 py-16">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        {Icon}
-      </div>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/50 px-6 py-14 text-center">
+      <Image
+        src="/empty-states.png"
+        alt=""
+        aria-hidden
+        width={2000}
+        height={2000}
+        sizes="176px"
+        className="mb-3 h-40 w-40 object-contain opacity-95"
+      />
+      <span className="sr-only">{Icon}</span>
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action && (
         <a
           href={action.href}
@@ -139,6 +147,7 @@ export function DataTable<T extends Record<string, any>>({
 export function StatusBadge({ status }: { status: string }) {
   const statusStyles: Record<string, string> = {
     paid: 'bg-success/10 text-success',
+    'partially paid': 'bg-warning/10 text-warning',
     sent: 'bg-brand/10 text-brand',
     draft: 'bg-muted text-muted-foreground',
     overdue: 'bg-destructive/10 text-destructive',

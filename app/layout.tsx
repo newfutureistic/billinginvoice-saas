@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Providers } from '@/components/providers'
+import { SITE } from '@/lib/seo'
 import './globals.css'
 
 const geistSans = Geist({
@@ -17,10 +18,48 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ToolForge — Professional invoices, generated in seconds',
+  metadataBase: new URL(SITE.url),
+  title: {
+    default: 'Bill Maker — Professional Invoice Generator',
+    template: '%s · Bill Maker',
+  },
   description:
-    'ToolForge is the operating system for your business paperwork. Create tax-ready invoices, quotes, and contracts in seconds — then send, track, and get paid. 40+ tools, one workspace.',
+    'Bill Maker is a free, professional invoice generator. Create GST-ready, multi-currency invoices online, download a print-ready PDF, send them, and track payments — in seconds.',
+  applicationName: SITE.name,
+  authors: [{ name: SITE.name, url: SITE.url }],
+  creator: SITE.name,
+  publisher: SITE.name,
   generator: 'v0.app',
+  formatDetection: { email: false, address: false, telephone: false },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-light-32x32.png', sizes: '32x32', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png', sizes: '32x32', media: '(prefers-color-scheme: dark)' },
+    ],
+    apple: '/apple-icon.png',
+  },
+  alternates: { canonical: '/' },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+  },
+  openGraph: {
+    type: 'website',
+    siteName: SITE.name,
+    locale: SITE.locale,
+    url: SITE.url,
+    title: 'Bill Maker — Professional invoices, generated in seconds',
+    description: SITE.description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: SITE.twitter,
+    creator: SITE.twitter,
+    title: 'Bill Maker — Professional invoices, generated in seconds',
+    description: SITE.description,
+  },
 }
 
 export const viewport: Viewport = {

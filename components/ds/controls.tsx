@@ -277,9 +277,9 @@ export function FormsSection() {
           </Field>
           <Field label="Workspace">
             <select className={cn(inputCls, 'appearance-none pr-8')} defaultValue="acme">
-              <option value="acme">Acme Inc.</option>
-              <option value="forge">ToolForge Labs</option>
-              <option value="northwind">Northwind Co.</option>
+              <option value="acme">Sample Company</option>
+              <option value="forge">Example Business</option>
+              <option value="northwind">Demo Client</option>
             </select>
           </Field>
           <Field label="Notes">

@@ -2,6 +2,7 @@
 
 import { InvoiceData } from '@/lib/invoice-types'
 import { Checkbox, FormField, NumberInput } from './form-inputs'
+import { formatMoney, currencySymbol } from '@/lib/currency-format'
 
 export function Step5Discount({
   discount,
@@ -74,11 +75,14 @@ export function Step5Discount({
             </div>
 
             <FormField
-              label={discount.type === 'percentage' ? 'Discount %' : `Discount Amount (${currency})`}
+              label={discount.type === 'percentage' ? 'Discount %' : `Discount Amount (${currencySymbol(currency)})`}
             >
               <NumberInput
                 value={discount.value}
-                onChange={(e) => onChange({ value: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const v = Math.max(0, parseFloat(e.target.value) || 0)
+                  onChange({ value: discount.type === 'percentage' ? Math.min(100, v) : v })
+                }}
                 min="0"
                 step={discount.type === 'percentage' ? '0.1' : '0.01'}
                 max={discount.type === 'percentage' ? '100' : undefined}
@@ -91,23 +95,23 @@ export function Step5Discount({
       <div className="space-y-2 p-4 rounded-lg border border-border bg-card">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotal</span>
-          <span className="text-foreground font-medium">{currency} {subtotal.toFixed(2)}</span>
+          <span className="text-foreground font-medium">{formatMoney(currency, subtotal)}</span>
         </div>
 
         {discount.applied && (
           <>
             <div className="flex justify-between text-sm text-destructive">
               <span>Discount ({discount.type === 'percentage' ? `${discount.value}%` : 'Fixed'})</span>
-              <span className="font-medium">- {currency} {discountAmount.toFixed(2)}</span>
+              <span className="font-medium">- {formatMoney(currency, discountAmount)}</span>
             </div>
 
             <div className="flex justify-between text-base border-t border-border pt-2">
               <span className="font-semibold text-foreground">After Discount</span>
-              <span className="font-bold text-brand">{currency} {afterDiscount.toFixed(2)}</span>
+              <span className="font-bold text-brand">{formatMoney(currency, afterDiscount)}</span>
             </div>
 
             <p className="text-xs text-muted-foreground mt-2">
-              You&apos;re saving your customer {currency} {discountAmount.toFixed(2)}
+              You&apos;re saving your customer {formatMoney(currency, discountAmount)}
             </p>
           </>
         )}

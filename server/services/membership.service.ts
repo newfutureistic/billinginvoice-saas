@@ -282,5 +282,19 @@ export class MembershipService extends BaseService {
       role: invite.role,
       ...(process.env.NODE_ENV === 'production' ? {} : { token: invite.token }),
     })
+    try {
+      const { EmailService } = await import('@/server/services/email.service')
+      await new EmailService().sendInvite(
+        invite.to,
+        invite.token,
+        this.ctx.workspace?.name ?? '',
+        invite.role,
+        invite.workspaceId,
+      )
+    } catch (err) {
+      this.logger.error('member.invite.email_failed', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
   }
 }

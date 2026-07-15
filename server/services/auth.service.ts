@@ -336,13 +336,23 @@ export class AuthService extends BaseService {
   }
 
   private async defaultDeliver(msg: DeliverMessage): Promise<void> {
-    // Email delivery is a separate concern (EmailMessage model + provider). Until a
-    // provider is wired, record the intent structurally; the secret is never logged in
-    // production.
+    // Structural log (secret never logged in production) …
     this.logger.info('auth.deliver', {
       to: msg.to,
       kind: msg.kind,
       ...(isProduction() ? {} : { secret: msg.secret }),
     })
+    // … then dispatch via the Mission 7 email service (Resend when configured, else
+    // logged). Lazily imported to avoid a circular dependency; never throws.
+    try {
+      const { EmailService } = await import('@/server/services/email.service')
+      const email = new EmailService()
+      if (msg.kind === 'verify') await email.sendVerification(msg.to, msg.secret)
+      else await email.sendPasswordReset(msg.to, msg.secret)
+    } catch (err) {
+      this.logger.error('auth.deliver.email_failed', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
   }
 }

@@ -174,3 +174,34 @@
 @utility shadow-token-xl {
   box-shadow: var(--shadow-xl);
 }
+
+/* Blog article content (Mission 3) — styles the server-rendered Markdown HTML. */
+.blog-content { color: var(--foreground); font-size: 1.05rem; line-height: 1.75; }
+.blog-content > * + * { margin-top: 1.25rem; }
+.blog-content h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; margin-top: 2.5rem; }
+.blog-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; }
+.blog-content h4 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; }
+.blog-content p { color: var(--muted-foreground); }
+.blog-content a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+.blog-content ul, .blog-content ol { padding-left: 1.5rem; color: var(--muted-foreground); }
+.blog-content ul { list-style: disc; }
+.blog-content ol { list-style: decimal; }
+.blog-content li + li { margin-top: 0.4rem; }
+.blog-content blockquote { border-left: 3px solid var(--brand); padding-left: 1rem; font-style: italic; color: var(--foreground); }
+.blog-content pre { background: var(--muted); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1rem; overflow-x: auto; font-size: 0.9rem; }
+.blog-content code { font-family: var(--font-geist-mono, monospace); font-size: 0.9em; }
+.blog-content :not(pre) > code { background: var(--muted); border-radius: 0.3rem; padding: 0.1rem 0.35rem; }
+.blog-content img { border-radius: 0.75rem; border: 1px solid var(--border); max-width: 100%; height: auto; }
+.blog-content hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+.blog-content .blog-embed { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 0.75rem; overflow: hidden; }
+.blog-content .blog-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Premium hero: a gentle float on the product mockup. Transform-only (no layout shift / CLS),
+   and gated behind prefers-reduced-motion so it respects users who opt out of motion. */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-float { animation: float 6s ease-in-out infinite; }
+}

@@ -16,11 +16,16 @@ import {
   Command,
   ChevronDown,
   Grid3x3,
+  Newspaper,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { mockUserProfile, mockNotifications } from '@/lib/dashboard-data'
+import { mockUserProfile } from '@/lib/dashboard-data'
+import { signOut, useSession } from 'next-auth/react'
+import { isSiteAdmin } from '@/lib/config/plans'
+import { useWorkspaceBootstrap } from '@/lib/api/hooks/use-workspace-bootstrap'
+import { useNotifications, useUnreadNotificationCount } from '@/lib/api/hooks/use-notifications'
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Overview' },
@@ -32,6 +37,7 @@ const navItems = [
 
 const adminItems = [
   { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+  { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
   { href: '/dashboard/team', icon: Users, label: 'Team' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
@@ -42,7 +48,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const unreadNotifications = mockNotifications.filter((n) => !n.read)
+  const { data: unreadData } = useUnreadNotificationCount()
+  const unreadCount = unreadData?.count ?? 0
+  const { data: notifData } = useNotifications()
+  const notifications = (notifData?.items ?? []).slice(0, 8)
+
+  // Select the active workspace after sign-in so tenant-scoped queries are enabled.
+  useWorkspaceBootstrap()
+
+  // Real signed-in identity (falls back to the placeholder only while the session loads).
+  const { data: session } = useSession()
+  const displayName = session?.user?.name || mockUserProfile.name
+  const displayEmail = session?.user?.email || mockUserProfile.email
+  const avatarText = session?.user?.name?.trim()?.charAt(0).toUpperCase() || mockUserProfile.avatar
+  // The blog CMS is site-global — only show it to site administrators (not every workspace owner).
+  const visibleAdminItems = adminItems.filter(
+    (item) => item.href !== '/dashboard/blog' || isSiteAdmin(session?.user?.email),
+  )
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -74,7 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-brand-foreground text-sm font-bold">
               TF
             </div>
-            <span className="text-foreground">ToolForge</span>
+            <span className="text-foreground">Bill Maker</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -111,7 +133,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p className="mb-4 mt-8 px-3 text-xs font-semibold uppercase tracking-widest text-sidebar-foreground/60">
             Admin
           </p>
-          {adminItems.map((item) => {
+          {visibleAdminItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
@@ -169,9 +191,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className="relative rounded-lg p-2 hover:bg-muted"
                 >
                   <Bell className="size-5" />
-                  {unreadNotifications.length > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
-                      {unreadNotifications.length}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
@@ -182,12 +204,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <h2 className="font-semibold">Notifications</h2>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                      {mockNotifications.length === 0 ? (
+                      {notifications.length === 0 ? (
                         <div className="p-8 text-center text-muted-foreground">
                           No notifications
                         </div>
                       ) : (
-                        mockNotifications.map((notif) => (
+                        notifications.map((notif) => (
                           <div
                             key={notif.id}
                             className={`border-b border-border p-4 hover:bg-muted/50 ${
@@ -195,8 +217,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             }`}
                           >
                             <p className="font-medium text-foreground">{notif.title}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{notif.message}</p>
-                            <p className="mt-2 text-xs text-muted-foreground">{notif.timestamp}</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{notif.body}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">{new Date(notif.createdAt).toLocaleString()}</p>
                           </div>
                         ))
                       )}
@@ -215,10 +237,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted"
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-foreground">
-                    {mockUserProfile.avatar}
+                    {avatarText}
                   </div>
                   <span className="hidden text-sm font-medium sm:inline">
-                    {mockUserProfile.name.split(' ')[0]}
+                    {displayName.split(' ')[0]}
                   </span>
                   <ChevronDown className="hidden size-4 text-muted-foreground sm:inline" />
                 </button>
@@ -226,8 +248,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {userMenuOpen && (
                   <div className="absolute right-0 top-14 z-50 w-48 rounded-lg border border-border bg-card shadow-lg">
                     <div className="p-4 border-b border-border">
-                      <p className="font-medium">{mockUserProfile.name}</p>
-                      <p className="text-sm text-muted-foreground">{mockUserProfile.email}</p>
+                      <p className="font-medium">{displayName}</p>
+                      <p className="text-sm text-muted-foreground">{displayEmail}</p>
                     </div>
                     <nav className="space-y-1 p-2">
                       <Link
@@ -246,7 +268,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <Settings className="size-4" />
                         Settings
                       </Link>
-                      <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-destructive/10 text-destructive">
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false)
+                          // Clear the active-workspace cookie so the next user who signs in on this
+                          // browser doesn't inherit the previous user's workspace (which would 403).
+                          document.cookie = 'activeWorkspaceId=; path=/; max-age=0; SameSite=Lax'
+                          void signOut({ callbackUrl: '/' })
+                        }}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-destructive/10 text-destructive"
+                      >
                         <LogOut className="size-4" />
                         Logout
                       </button>

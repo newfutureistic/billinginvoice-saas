@@ -4,6 +4,7 @@ import { AuditService } from '@/server/services/audit.service'
 import { ActivityService } from '@/server/services/activity.service'
 import { WorkspaceRepository } from '@/server/repositories/workspace.repository'
 import { MembershipRepository } from '@/server/repositories/membership.repository'
+import { bootstrapPersonalWorkspace } from '@/server/services/workspace-bootstrap'
 import { runInTransaction } from '@/server/db/transaction'
 import { parseWith } from '@/server/http/middleware/validation'
 import {
@@ -52,7 +53,25 @@ export class WorkspaceService extends BaseService {
   /** The workspaces the authenticated user belongs to (frozen WorkspaceSwitcher). */
   async listForUser(): Promise<WorkspaceOutputDTO[]> {
     if (!this.ctx.user) throw new UnauthenticatedError()
-    const memberships = await this.memberships.listByUser(this.ctx.user.id)
+    let memberships = await this.memberships.listByUser(this.ctx.user.id)
+
+    // Self-heal: every user must have a personal workspace, otherwise every tenant-scoped
+    // request 403s ("Could not load your dashboard"). Credentials signups are bootstrapped on
+    // email verification — but if that never completes (e.g. email delivery isn't configured),
+    // the user is left with none. Provision it now, idempotently, so the dashboard works. The
+    // slug is random-suffixed, so a concurrent request can't create a duplicate; if one races
+    // us we simply re-read.
+    if (memberships.length === 0) {
+      try {
+        await bootstrapPersonalWorkspace(this.ctx, this.ctx.user.id, this.ctx.user.name ?? this.ctx.user.email)
+      } catch (err) {
+        this.ctx.logger.warn('lazy workspace bootstrap failed', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+      memberships = await this.memberships.listByUser(this.ctx.user.id)
+    }
+
     return memberships.map((m) => toWorkspaceDTO(m.workspace))
   }
 
