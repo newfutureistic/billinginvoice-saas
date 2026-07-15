@@ -6,15 +6,43 @@ import type { Metadata } from 'next'
  * export. The canonical origin is read from env (falls back to the production domain) so
  * canonical URLs, Open Graph, and the sitemap all agree.
  */
-const RAW_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.APP_URL ||
-  process.env.AUTH_URL ||
-  'https://bill-maker.com'
+const FALLBACK_URL = 'https://bill-maker.com'
+
+/**
+ * Resolve the canonical origin from env, tolerating the common deployment mistakes.
+ *
+ * `app/layout.tsx` feeds this to `new URL(...)` at module scope, so a malformed value used to
+ * abort the entire production build with an opaque `ERR_INVALID_URL` that named no variable.
+ * A host without a protocol ("bill-maker.com") is the usual culprit, so it is normalised to
+ * https rather than crashing; anything still unparseable falls back to the production domain
+ * with a warning naming the offending variable.
+ */
+function resolveSiteUrl(): string {
+  const candidates: Array<[string, string | undefined]> = [
+    ['NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL],
+    ['APP_URL', process.env.APP_URL],
+    ['AUTH_URL', process.env.AUTH_URL],
+  ]
+  for (const [name, raw] of candidates) {
+    const value = raw?.trim()
+    if (!value) continue
+    // Accept a bare host by assuming https (the usual "forgot the protocol" case).
+    const normalised = /^https?:\/\//i.test(value) ? value : `https://${value}`
+    try {
+      const url = new URL(normalised)
+      if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin
+    } catch {
+      /* fall through to the warning below */
+    }
+    console.warn(`[seo] ${name}="${value}" is not a usable URL — falling back to ${FALLBACK_URL}`)
+    return FALLBACK_URL
+  }
+  return FALLBACK_URL
+}
 
 export const SITE = {
   name: 'Bill Maker',
-  url: RAW_URL.replace(/\/+$/, ''),
+  url: resolveSiteUrl(),
   locale: 'en_US',
   twitter: '@billmaker',
   description:
