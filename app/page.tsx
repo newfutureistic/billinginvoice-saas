@@ -1,32 +1,42 @@
 import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/marketing/site-header'
 import { Hero } from '@/components/marketing/hero'
-import { TrustLogos, Stats } from '@/components/marketing/social-proof'
+import { Stats } from '@/components/marketing/social-proof'
 import { FeaturedTools } from '@/components/marketing/featured-tools'
-import { ToolCategories } from '@/components/marketing/tool-categories'
 import { WhyChoose } from '@/components/marketing/why-choose'
+import { ProductShowcase } from '@/components/marketing/product-showcase'
 import { TemplatesShowcase } from '@/components/marketing/templates-showcase'
+import { HowItWorks } from '@/components/marketing/how-it-works'
 import { PricingPreview } from '@/components/marketing/pricing-preview'
-import { Testimonials } from '@/components/marketing/testimonials'
 import { Faq } from '@/components/marketing/faq'
 import { Cta } from '@/components/marketing/cta'
 import { SiteFooter } from '@/components/marketing/site-footer'
+import { LatestPosts } from '@/components/marketing/latest-posts'
+import { JsonLd } from '@/components/seo/json-ld'
+import { organizationSchema, websiteSchema, webApplicationSchema } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'ToolForge — Professional invoices, generated in seconds',
+  title: 'Bill Maker — Professional Invoice Generator',
   description:
-    'ToolForge is the operating system for your business paperwork. Create tax-ready invoices, quotes, and contracts in seconds — then send, track, and get paid. 40+ tools, one workspace.',
-  keywords: ['invoice', 'invoicing', 'quotes', 'contracts', 'business tools', 'SaaS'],
+    'Bill Maker is a free, professional invoice generator. Create GST-ready, multi-currency invoices online, download a print-ready PDF, send them, and track payments — in seconds.',
+  keywords: [
+    'invoice generator',
+    'free invoice generator',
+    'create invoice online',
+    'gst invoice',
+    'invoice maker',
+    'invoice pdf',
+  ],
   openGraph: {
-    title: 'ToolForge — Professional invoices, generated in seconds',
-    description: 'Create tax-ready invoices in seconds with ToolForge',
+    title: 'Bill Maker — Professional Invoice Generator',
+    description: 'Create free, GST-ready, professional invoices online and download a PDF in seconds.',
     type: 'website',
-    url: 'https://toolforge.app',
+    url: 'https://bill-maker.com',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ToolForge — Professional invoices, generated in seconds',
-    description: 'Create tax-ready invoices in seconds with ToolForge',
+    title: 'Bill Maker — Professional Invoice Generator',
+    description: 'Create free, GST-ready, professional invoices online and download a PDF in seconds.',
   },
   robots: 'index, follow',
 }
@@ -34,17 +44,18 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={[organizationSchema(), websiteSchema(), webApplicationSchema()]} />
       <SiteHeader />
       <main>
         <Hero />
-        <TrustLogos />
         <FeaturedTools />
         <Stats />
-        <ToolCategories />
         <WhyChoose />
+        <ProductShowcase />
         <TemplatesShowcase />
+        <HowItWorks />
         <PricingPreview />
-        <Testimonials />
+        <LatestPosts />
         <Faq />
         <Cta />
       </main>

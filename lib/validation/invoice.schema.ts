@@ -18,6 +18,9 @@ export const businessDetailsSchema = z.object({
   zipCode: z.string().max(20).optional().default(''),
   country: z.string().max(120).optional().default(''),
   taxId: z.string().max(60).optional().default(''),
+  gstin: z.string().max(30).optional().default(''),
+  pan: z.string().max(20).optional().default(''),
+  website: z.string().max(200).optional().default(''),
   businessType: z.string().max(120).optional().default(''),
 })
 
@@ -32,6 +35,7 @@ export const clientDetailsSchema = z.object({
   zipCode: z.string().max(20).optional().default(''),
   country: z.string().max(120).optional().default(''),
   taxId: z.string().max(60).optional().default(''),
+  gstin: z.string().max(30).optional().default(''),
 })
 
 export const invoiceItemSchema = z.object({
@@ -46,7 +50,11 @@ export const taxConfigSchema = z.object({
   rate: z.number().min(0).max(100),
   basis: z.enum(['inclusive', 'exclusive']),
   customLabel: z.string().max(40).optional(),
+  supplyType: z.enum(['intra', 'inter']).optional(),
 })
+
+/** HSN/SAC is carried per line item via the invoice item schema (persisted in payload). */
+export const invoiceItemMetaSchema = z.object({ hsn: z.string().max(20).optional() })
 
 export const discountSchema = z.object({
   type: z.enum(['percentage', 'fixed']),

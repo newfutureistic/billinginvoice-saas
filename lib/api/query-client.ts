@@ -18,8 +18,11 @@ export function makeQueryClient(): QueryClient {
             // Don't retry client errors that a retry can't fix.
             if (error.status >= 400 && error.status < 500) return false
           }
-          return failureCount < 1
+          // Transient 5xx / network failures (e.g. a brief database blip) — retry a few
+          // times with backoff so the UI rides through it instead of showing an error.
+          return failureCount < 3
         },
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
       },
       mutations: {
         retry: false,

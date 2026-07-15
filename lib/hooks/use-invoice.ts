@@ -111,6 +111,17 @@ export function useInvoice(initialData?: InvoiceData) {
     [updateInvoice, autoSave]
   )
 
+  const updateCurrency = useCallback(
+    (currency: InvoiceData['currency']) => {
+      updateInvoice((current) => ({
+        ...current,
+        currency,
+      }))
+      autoSave()
+    },
+    [updateInvoice, autoSave]
+  )
+
   const addItem = useCallback(
     (item?: Partial<InvoiceData['items'][0]>) => {
       const newItem = {
@@ -183,11 +194,60 @@ export function useInvoice(initialData?: InvoiceData) {
   )
 
   const updateBranding = useCallback(
-    (branding: Partial<Pick<InvoiceData, 'brandColor' | 'logoUrl' | 'brandingSection'>>) => {
+    (
+      branding: Partial<
+        Pick<InvoiceData, 'brandColor' | 'logoUrl' | 'brandingSection' | 'signatureUrl' | 'signatureLabel' | 'watermark'>
+      >,
+    ) => {
       updateInvoice((current) => ({
         ...current,
         ...branding,
       }))
+      autoSave()
+    },
+    [updateInvoice, autoSave]
+  )
+
+  const updatePayment = useCallback(
+    (payment: Partial<Pick<InvoiceData, 'upiId' | 'upiPayeeName' | 'upiIncludeAmount' | 'qrCode'>>) => {
+      updateInvoice((current) => ({
+        ...current,
+        ...payment,
+      }))
+      autoSave()
+    },
+    [updateInvoice, autoSave]
+  )
+
+  const updateBankDetails = useCallback(
+    (details: Partial<InvoiceData['bankDetails']>) => {
+      updateInvoice((current) => ({
+        ...current,
+        bankDetails: { ...current.bankDetails, ...details },
+      }))
+      autoSave()
+    },
+    [updateInvoice, autoSave]
+  )
+
+  const updateMeta = useCallback(
+    (
+      meta: Partial<
+        Pick<
+          InvoiceData,
+          | 'documentTitle'
+          | 'invoiceNumber'
+          | 'invoicePrefix'
+          | 'poNumber'
+          | 'referenceNumber'
+          | 'paymentMethod'
+          | 'paymentStatus'
+          | 'additionalCharges'
+          | 'roundOff'
+        >
+      >,
+    ) => {
+      updateInvoice((current) => ({ ...current, ...meta }))
       autoSave()
     },
     [updateInvoice, autoSave]
@@ -226,6 +286,17 @@ export function useInvoice(initialData?: InvoiceData) {
     [updateInvoice, autoSave]
   )
 
+  const updateQrCode = useCallback(
+    (qrCode: string) => {
+      updateInvoice((current) => ({
+        ...current,
+        qrCode,
+      }))
+      autoSave()
+    },
+    [updateInvoice, autoSave]
+  )
+
   const switchTemplate = useCallback(
     (templateId: string) => {
       updateInvoice((current) => ({
@@ -254,6 +325,7 @@ export function useInvoice(initialData?: InvoiceData) {
     updateBusinessDetails,
     updateClientDetails,
     updateItems,
+    updateCurrency,
     addItem,
     removeItem,
     duplicateItem,
@@ -265,6 +337,10 @@ export function useInvoice(initialData?: InvoiceData) {
     updateNotes,
     updateTerms,
     updatePaymentInstructions,
+    updateQrCode,
+    updatePayment,
+    updateBankDetails,
+    updateMeta,
     switchTemplate,
   }
 }

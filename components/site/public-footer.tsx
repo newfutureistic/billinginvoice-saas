@@ -1,22 +1,21 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { Zap } from 'lucide-react'
 
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: 'Product',
     links: [
-      { label: 'Invoice Generator', href: '/tools/invoice-generator' },
-      { label: 'Quotes & Estimates', href: '/tools/quotes' },
-      { label: 'Expense Tracker', href: '/tools/expenses' },
-      { label: 'All tools', href: '/tools' },
+      { label: 'Invoice Generator', href: '/invoice/new' },
       { label: 'Templates', href: '/templates' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Invoice guide', href: '/invoice-guide' },
+      { label: 'FAQ', href: '/faq' },
     ],
   },
   {
     title: 'Company',
     links: [
       { label: 'About', href: '/about' },
-      { label: 'Customers', href: '/customers' },
       { label: 'Blog', href: '/blog' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'Contact', href: '/contact' },
@@ -26,8 +25,8 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     title: 'Resources',
     links: [
       { label: 'Help center', href: '/help' },
-      { label: 'Tax reference', href: '/help' },
-      { label: 'Guides', href: '/blog' },
+      { label: 'Invoice guide', href: '/invoice-guide' },
+      { label: 'FAQ', href: '/faq' },
       { label: 'Contact support', href: '/contact' },
       { label: 'Status', href: '/help' },
     ],
@@ -37,9 +36,9 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: 'Privacy', href: '/privacy' },
       { label: 'Terms', href: '/terms' },
-      { label: 'Security', href: '/help' },
-      { label: 'GDPR', href: '/privacy' },
-      { label: 'Cookies', href: '/privacy' },
+      { label: 'Refund Policy', href: '/refund-policy' },
+      { label: 'Cookie Policy', href: '/cookie-policy' },
+      { label: 'Disclaimer', href: '/disclaimer' },
     ],
   },
 ]
@@ -50,17 +49,19 @@ export function PublicFooter() {
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Zap className="size-4" fill="currentColor" strokeWidth={0} />
-              </span>
-              <span className="text-[0.95rem] font-semibold tracking-[-0.01em] text-foreground">
-                ToolForge
-              </span>
+            <Link href="/" className="flex items-center" aria-label="Bill Maker — home">
+              <Image
+                src="/logo.png"
+                alt="Bill Maker"
+                width={2109}
+                height={746}
+                sizes="170px"
+                className="h-9 w-auto mix-blend-multiply"
+              />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              The operating system for your business paperwork. Invoices, quotes, contracts
-              and 40+ tools in one calm workspace.
+              A dedicated professional invoice generator. Create GST-ready, multi-currency
+              invoices, download a print-ready PDF, and get paid faster.
             </p>
           </div>
 
@@ -87,7 +88,7 @@ export function PublicFooter() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ToolForge, Inc. All rights reserved.
+            © {new Date().getFullYear()} Bill Maker, Inc. All rights reserved.
           </p>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="size-2 rounded-full bg-success" aria-hidden />

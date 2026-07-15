@@ -45,20 +45,42 @@ export function AuthInput({
   type = 'text',
   required = true,
   error,
+  name,
+  value,
+  onChange,
+  autoComplete,
+  id,
+  inputMode,
+  maxLength,
 }: {
   label: string
   placeholder: string
   type?: string
   required?: boolean
   error?: string
+  // Optional, non-breaking: let pages drive the input as a controlled field.
+  name?: string
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  autoComplete?: string
+  id?: string
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
+  maxLength?: number
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
       <input
+        id={id}
+        name={name}
         type={type}
         placeholder={placeholder}
         required={required}
+        value={value}
+        onChange={onChange}
+        autoComplete={autoComplete}
+        inputMode={inputMode}
+        maxLength={maxLength}
         className={cn(
           'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground',
           'transition-colors focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-transparent',
@@ -73,15 +95,22 @@ export function AuthInput({
 export function AuthCheckbox({
   label,
   id,
+  checked,
+  onChange,
 }: {
   label: string
   id: string
+  // Optional, non-breaking: controlled checkbox.
+  checked?: boolean
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
     <div className="flex items-center gap-2">
       <input
         type="checkbox"
         id={id}
+        checked={checked}
+        onChange={onChange}
         className="h-4 w-4 rounded border border-input bg-background accent-brand"
       />
       <label htmlFor={id} className="text-sm text-foreground cursor-pointer">

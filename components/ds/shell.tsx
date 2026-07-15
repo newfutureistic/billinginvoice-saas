@@ -97,7 +97,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2.5">
             <ForgeMark />
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight text-foreground">ToolForge</p>
+              <p className="text-sm font-semibold tracking-tight text-foreground">Bill Maker</p>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 Design System
               </p>
@@ -166,7 +166,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <ForgeMark />
-                <p className="text-sm font-semibold text-foreground">ToolForge</p>
+                <p className="text-sm font-semibold text-foreground">Bill Maker</p>
               </div>
               <button
                 type="button"

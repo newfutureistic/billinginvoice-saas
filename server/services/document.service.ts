@@ -11,6 +11,7 @@ import {
 import { DocumentSequenceRepository } from '@/server/repositories/document-sequence.repository'
 import { ToolRepository } from '@/server/repositories/tool.repository'
 import { runInTransaction } from '@/server/db/transaction'
+import { accessConfig, currentMonthStart, isWithinMonthlyLimit } from '@/lib/config/plans'
 import { parseWith } from '@/server/http/middleware/validation'
 import { computeDocumentTotals } from '@/server/utils/document-totals'
 import { formatDocumentNumber } from '@/server/utils/invoice-number'
@@ -35,6 +36,7 @@ import {
   AuthorizationError,
   BadRequestError,
   BusinessError,
+  ConflictError,
   NotFoundError,
   TenantRequiredError,
 } from '@/server/errors/app-error'
@@ -118,6 +120,20 @@ export class DocumentService extends BaseService {
     const input = parseWith(documentCreateSchema, raw)
     const type = input.type ?? opts.type ?? 'INVOICE'
 
+    // FREE-plan monthly limit (Phase 1). Only successful INVOICE creations count; the count is
+    // "invoices created this calendar month" (soft-deleted included), so it resets automatically
+    // each month with no background job, and deleting an invoice never restores quota. Validation
+    // has already passed above and a blocked create throws before any row is written, so neither
+    // validation failures nor blocked attempts consume the limit.
+    if (type === 'INVOICE' && accessConfig.monthlyInvoiceLimit > 0) {
+      const used = await this.repo.countInvoicesCreatedSince(currentMonthStart())
+      if (!isWithinMonthlyLimit(used)) {
+        throw new BusinessError(
+          `You've reached your free limit of ${accessConfig.monthlyInvoiceLimit} invoices this calendar month. It resets automatically on the 1st.`,
+        )
+      }
+    }
+
     const tool = (await this.tools.findByOutputType(type)) ?? (await this.tools.firstDocumentTool())
     if (!tool) {
       throw new BusinessError('No document tool is configured; seed the tool registry first.')
@@ -137,7 +153,7 @@ export class DocumentService extends BaseService {
     const shipping = input.shipping ?? { cost: 0, applied: false }
     const items = this.buildItems(input)
 
-    const created = await runInTransaction(async (tx) => {
+    const created = await this.asNumberConflict(() => runInTransaction(async (tx) => {
       let number = input.number
       if (!number) {
         const alloc = await new DocumentSequenceRepository(tx).allocate(this.wsId, type, period, {
@@ -152,6 +168,13 @@ export class DocumentService extends BaseService {
         })
       }
       const repo = new DocumentRepository(this.wsId, tx)
+      // Uniqueness is checked INSIDE the transaction so two concurrent creates serialise on the
+      // same snapshot rather than both passing a pre-flight check. Auto-allocated numbers come
+      // from the sequence table and are already unique, so only user-supplied ones are checked.
+      if (input.number) {
+        const clash = await repo.findByNumber(number)
+        if (clash) throw new ConflictError('This invoice number already exists.')
+      }
       return repo.createWithItems(
         {
           type,
@@ -173,16 +196,42 @@ export class DocumentService extends BaseService {
           notes: input.notes ?? null,
           terms: input.terms ?? null,
           paymentInstructions: input.paymentInstructions ?? null,
+          branding: input.branding !== undefined ? jsonify(input.branding) : undefined,
+          bankDetails: input.bankDetails !== undefined ? jsonify(input.bankDetails) : undefined,
+          payload: input.payload !== undefined ? jsonify(input.payload) : undefined,
           templateId: input.templateId ?? null,
           toolId: tool.id,
           createdById: this.ctx.user?.id ?? null,
         },
         items,
       )
-    })
+    }))
 
     await this.trace('create', created, `created ${type.toLowerCase()} ${created.number}`)
     return toDocumentDetailDTO(created)
+  }
+
+  /**
+   * Translate the database's unique-constraint violation on (workspaceId, number) into the
+   * user-facing ConflictError.
+   *
+   * The in-transaction pre-check catches virtually every duplicate, but a concurrent create can
+   * still lose the race at the database. `@@unique([workspaceId, number])` rejects it with
+   * P2002, whose default message ("Unique constraint failed on: workspaceId, number") is a raw
+   * database detail that must never reach a user. Any other error propagates untouched.
+   */
+  private async asNumberConflict<T>(op: () => Promise<T>): Promise<T> {
+    try {
+      return await op()
+    } catch (err) {
+      const e = err as { prismaCode?: string; meta?: { target?: unknown } }
+      if (e?.prismaCode === 'P2002') {
+        const target = e.meta?.target
+        const fields = Array.isArray(target) ? target.join(',') : String(target ?? '')
+        if (/number/i.test(fields)) throw new ConflictError('This invoice number already exists.')
+      }
+      throw err
+    }
   }
 
   private buildItems(input: DocumentCreateInput): DocumentItemCreateData[] {
@@ -214,6 +263,9 @@ export class DocumentService extends BaseService {
     if (input.notes !== undefined) data.notes = input.notes ?? null
     if (input.terms !== undefined) data.terms = input.terms ?? null
     if (input.paymentInstructions !== undefined) data.paymentInstructions = input.paymentInstructions ?? null
+    if (input.branding !== undefined) data.branding = jsonify(input.branding)
+    if (input.bankDetails !== undefined) data.bankDetails = jsonify(input.bankDetails)
+    if (input.payload !== undefined) data.payload = jsonify(input.payload)
     if (input.templateId !== undefined) {
       data.template = input.templateId ? { connect: { id: input.templateId } } : { disconnect: true }
     }
@@ -227,8 +279,15 @@ export class DocumentService extends BaseService {
       throw new BadRequestError('Updating line items also requires the tax configuration')
     }
 
-    await runInTransaction(async (tx) => {
+    await this.asNumberConflict(() => runInTransaction(async (tx) => {
       const repo = new DocumentRepository(this.wsId, tx)
+      // Renaming to a number already used by another live document in this workspace is a
+      // conflict; the document being edited is excluded so re-saving its own number is a no-op.
+      if (input.number !== undefined && input.number !== existing.number) {
+        const clash = await repo.findByNumber(input.number, id)
+        if (clash) throw new ConflictError('This invoice number already exists.')
+        data.number = input.number
+      }
       if (recompute && input.items && input.tax) {
         const discount = input.discount ?? { type: 'fixed' as const, value: 0, applied: false }
         const shipping = input.shipping ?? { cost: 0, applied: false }
@@ -253,7 +312,7 @@ export class DocumentService extends BaseService {
         })
       }
       await repo.update(id, data)
-    })
+    }))
 
     const updated = await this.repo.findByIdWithItems(id)
     if (!updated) throw new NotFoundError('Document', { id })

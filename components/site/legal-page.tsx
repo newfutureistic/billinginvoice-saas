@@ -66,8 +66,8 @@ export function LegalPage({
         <div className="mt-12 rounded-2xl border border-border bg-secondary/40 p-6 text-sm leading-relaxed text-muted-foreground">
           This document is provided for general informational purposes and does not constitute legal
           advice. Questions? Email{' '}
-          <a href="mailto:legal@toolforge.com" className="font-medium text-brand hover:underline">
-            legal@toolforge.com
+          <a href="mailto:legal@bill-maker.com" className="font-medium text-brand hover:underline">
+            legal@bill-maker.com
           </a>
           .
         </div>

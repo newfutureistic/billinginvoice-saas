@@ -33,7 +33,7 @@ export default function DesignSystemPage() {
       <footer className="border-t border-border py-10">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <p className="text-sm text-muted-foreground">
-            ToolForge Design System — built to be re-themed, extended, and trusted.
+            Bill Maker Design System — built to be re-themed, extended, and trusted.
           </p>
           <p className="font-mono text-xs text-muted-foreground">v1.0 · Foundation</p>
         </div>

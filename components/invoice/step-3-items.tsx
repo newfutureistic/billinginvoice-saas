@@ -3,7 +3,25 @@
 import { InvoiceItem } from '@/lib/invoice-types'
 import { Copy, GripVertical, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { FormField, Input, NumberInput } from './form-inputs'
+import { FormField, Input, NumberInput, Select } from './form-inputs'
+import { formatMoney, currencySymbol } from '@/lib/currency-format'
+
+/** Enterprise currency list (code — symbol/name), matching the DB `Currency` enum. */
+export const CURRENCY_OPTIONS = [
+  { value: 'INR', label: 'INR — ₹ Indian Rupee' },
+  { value: 'USD', label: 'USD — $ US Dollar' },
+  { value: 'EUR', label: 'EUR — € Euro' },
+  { value: 'GBP', label: 'GBP — £ British Pound' },
+  { value: 'AED', label: 'AED — د.إ UAE Dirham' },
+  { value: 'AUD', label: 'AUD — A$ Australian Dollar' },
+  { value: 'CAD', label: 'CAD — CA$ Canadian Dollar' },
+  { value: 'SGD', label: 'SGD — S$ Singapore Dollar' },
+  { value: 'CHF', label: 'CHF — Swiss Franc' },
+  { value: 'JPY', label: 'JPY — ¥ Japanese Yen' },
+  { value: 'NZD', label: 'NZD — NZ$ New Zealand Dollar' },
+  { value: 'SAR', label: 'SAR — ﷼ Saudi Riyal' },
+  { value: 'QAR', label: 'QAR — ﷼ Qatari Riyal' },
+]
 
 export function Step3Items({
   items,
@@ -13,6 +31,7 @@ export function Step3Items({
   onDuplicateItem,
   onRemoveItem,
   onReorderItems,
+  onCurrencyChange,
 }: {
   items: InvoiceItem[]
   currency: string
@@ -21,6 +40,7 @@ export function Step3Items({
   onDuplicateItem: (itemId: string) => void
   onRemoveItem: (itemId: string) => void
   onReorderItems: (items: InvoiceItem[]) => void
+  onCurrencyChange: (currency: string) => void
 }) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
 
@@ -80,6 +100,14 @@ export function Step3Items({
         </p>
       </div>
 
+      <FormField label="Currency">
+        <Select
+          value={currency}
+          onChange={(e) => onCurrencyChange(e.target.value)}
+          options={CURRENCY_OPTIONS}
+        />
+      </FormField>
+
       <div className="space-y-4">
         {items.map((item, index) => (
           <div
@@ -98,12 +126,27 @@ export function Step3Items({
               <GripVertical className="h-5 w-5 text-muted-foreground mt-3 flex-shrink-0" />
 
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                <FormField label="Description">
+                <FormField label="Description" className="md:col-span-2">
                   <Input
                     value={item.description}
                     onChange={(e) => handleFieldChange(index, 'description', e.target.value)}
                     placeholder="What are you billing for?"
-                    className="md:col-span-2"
+                  />
+                </FormField>
+
+                <FormField label="HSN / SAC">
+                  <Input
+                    value={item.hsn ?? ''}
+                    onChange={(e) => handleFieldChange(index, 'hsn', e.target.value)}
+                    placeholder="998314"
+                  />
+                </FormField>
+
+                <FormField label="SKU">
+                  <Input
+                    value={item.sku ?? ''}
+                    onChange={(e) => handleFieldChange(index, 'sku', e.target.value)}
+                    placeholder="PROD-001"
                   />
                 </FormField>
 
@@ -127,7 +170,7 @@ export function Step3Items({
                     />
                   </FormField>
 
-                  <FormField label={`Rate (${currency})`}>
+                  <FormField label={`Rate (${currencySymbol(currency)})`}>
                     <NumberInput
                       value={item.rate}
                       onChange={(e) =>
@@ -141,7 +184,7 @@ export function Step3Items({
 
                 <div className="md:col-span-3 flex items-end justify-between">
                   <p className="text-sm font-medium text-foreground">
-                    Subtotal: {currency} {(item.quantity * item.rate).toFixed(2)}
+                    Subtotal: {formatMoney(currency, item.quantity * item.rate)}
                   </p>
 
                   <div className="flex gap-2">
@@ -171,7 +214,7 @@ export function Step3Items({
         <div className="flex justify-between items-center bg-secondary/30 p-4 rounded-lg">
           <span className="font-medium text-foreground">Subtotal</span>
           <span className="text-lg font-semibold text-foreground">
-            {currency} {total.toFixed(2)}
+            {formatMoney(currency, total)}
           </span>
         </div>
 

@@ -5,7 +5,7 @@ import { TemplatesGallery } from '@/components/site/templates-gallery'
 import { Cta } from '@/components/marketing/cta'
 
 export const metadata: Metadata = {
-  title: 'Templates — ToolForge',
+  title: 'Templates — Bill Maker',
   description:
     'Professionally designed, print-ready templates for invoices, quotes, receipts, contracts, and proposals. Add your brand and stay consistent.',
   alternates: { canonical: '/templates' },

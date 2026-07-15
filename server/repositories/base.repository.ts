@@ -1,5 +1,6 @@
 import { prisma, type DbClient } from '@/server/db/prisma'
 import { mapPrismaError } from '@/server/db/errors'
+import { withDbRetry } from '@/server/db/retry'
 import {
   buildPageMeta,
   resolvePagination,
@@ -19,10 +20,14 @@ import { resolveCursorLimit, type CursorInput, type CursorPage } from '@/server/
 export abstract class BaseRepository {
   constructor(protected readonly db: DbClient = prisma) {}
 
-  /** Execute a Prisma operation, normalizing any thrown error to a `DatabaseError`. */
+  /**
+   * Execute a Prisma operation, normalizing any thrown error to a `DatabaseError`. Transient
+   * connection blips (a dropped Supabase pooler connection) are retried automatically so they
+   * don't surface to the user as "Could not load…".
+   */
   protected async run<T>(op: () => Promise<T>): Promise<T> {
     try {
-      return await op()
+      return await withDbRetry(op)
     } catch (err) {
       throw mapPrismaError(err)
     }

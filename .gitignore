@@ -6,15 +6,78 @@ __v0_jsx-dev-runtime.ts
 .v0-trash/
 .vercel/
 
-# Environment variables
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+.pnpm-store
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# Environment variables (never commit secrets; keep the template)
 .env
-.env*.local
+.env.*
 !.env.example
 
-# Common ignores
-node_modules
+# Next.js / build output
 .next/
-.DS_Store
+out/
+dist/
+.output
+build/Release
 
-# Prisma
+# TypeScript build info
+*.tsbuildinfo
+
+# Prisma generated client
 /prisma/generated
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Caches
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+.npm
+.turbo
+
+# Test coverage
+coverage
+*.lcov
+.nyc_output
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS / editor
+.DS_Store
+.vscode-test
+.node_repl_history
+.tern-port
+
+# Package tarballs
+*.tgz
+
+# Internal engineering/audit reports (working notes, not product code)
+*_REPORT.md
+MISSION_*.md
+PHASE_*_*.md
+QA_REPORT.md

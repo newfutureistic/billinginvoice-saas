@@ -1,16 +1,14 @@
 import {
   FileText,
   Receipt,
-  Calculator,
-  FileSignature,
   QrCode,
   Scissors,
-  Wallet,
   BarChart3,
   Building2,
   Briefcase,
   Users,
   Landmark,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -23,39 +21,41 @@ export type Tool = {
   featured?: boolean
 }
 
+/** Real invoice capabilities — each links straight into the generator. No other products. */
 export const featuredTools: Tool[] = [
   {
     name: 'Invoice Generator',
     description:
       'Create pixel-perfect, tax-ready invoices in under a minute. Send, track, and get paid faster.',
     icon: Receipt,
-    href: '/tools/invoice-generator',
+    href: '/invoice/new',
     badge: 'Most popular',
     featured: true,
   },
   {
-    name: 'Quote & Estimate Builder',
+    name: 'GST & VAT Invoices',
     description:
-      'Turn proposals into approved deals with branded, itemized estimates that convert to invoices.',
+      'Add GST, VAT, or sales tax with automatic CGST / SGST / IGST splits on every line item.',
+    icon: BarChart3,
+    href: '/invoice/new',
+  },
+  {
+    name: 'Multi-Currency & PDF',
+    description:
+      'Bill clients in USD, INR, EUR, GBP and more, then download a clean, print-ready PDF.',
     icon: FileText,
-    href: '/tools/quotes',
+    href: '/invoice/new',
   },
   {
-    name: 'Expense Tracker',
+    name: 'Payments & Tracking',
     description:
-      'Capture receipts, categorize spend, and reconcile in a single, audit-friendly ledger.',
-    icon: Wallet,
-    href: '/tools/expenses',
-  },
-  {
-    name: 'Tax Calculator',
-    description:
-      'Multi-region VAT, GST, and sales tax computed automatically on every line item.',
-    icon: Calculator,
-    href: '/tools/tax',
+      'Accept Razorpay and UPI payments, add a scannable QR, and record part-payments as they arrive.',
+    icon: CreditCard,
+    href: '/invoice/new',
   },
 ]
 
+/** What you can do inside the invoice builder (honest capabilities, not separate products). */
 export const toolCategories: {
   name: string
   description: string
@@ -63,47 +63,40 @@ export const toolCategories: {
   count: number
 }[] = [
   {
-    name: 'Billing & Invoicing',
-    description: 'Invoices, quotes, receipts, recurring billing and reminders.',
+    name: 'Create & Customize',
+    description: 'Line items, taxes, discounts, shipping, notes, your logo and brand color — one guided builder.',
     icon: Receipt,
-    count: 12,
+    count: 0,
   },
   {
-    name: 'Documents & Contracts',
-    description: 'Proposals, agreements, e-signatures and templated paperwork.',
-    icon: FileSignature,
-    count: 9,
-  },
-  {
-    name: 'Finance & Tax',
-    description: 'Expense tracking, tax computation, and profit reporting.',
+    name: 'Tax & Compliance',
+    description: 'GST, VAT, and sales tax with automatic CGST / SGST / IGST splits and sequential numbering.',
     icon: BarChart3,
-    count: 8,
+    count: 0,
   },
   {
-    name: 'Productivity',
-    description: 'QR codes, file conversion, splitting and quick utilities.',
+    name: 'Get Paid',
+    description: 'Accept Razorpay & UPI payments, add a scannable pay QR, and record part-payments.',
     icon: QrCode,
-    count: 15,
+    count: 0,
+  },
+  {
+    name: 'Track & Manage',
+    description: 'Save clients, reuse templates, download PDFs, and see exactly what has been paid.',
+    icon: Building2,
+    count: 0,
   },
 ]
 
 export const stats: { value: string; label: string }[] = [
-  { value: '2.4M+', label: 'Documents generated' },
-  { value: '180+', label: 'Countries served' },
-  { value: '$4.1B', label: 'Invoiced through ToolForge' },
-  { value: '99.99%', label: 'Uptime, last 12 months' },
+  { value: '10+', label: 'Currencies supported' },
+  { value: 'GST · VAT', label: 'Tax modes built in' },
+  { value: 'PDF', label: 'Print-ready export' },
+  { value: 'Free', label: 'To start, no card' },
 ]
 
-export const trustLogos: string[] = [
-  'Northwind',
-  'Lattice',
-  'Evergreen',
-  'Monzo',
-  'Cadence',
-  'Baseline',
-  'Vantage',
-]
+/** No fabricated customer logos. */
+export const trustLogos: string[] = []
 
 export const whyChoose: {
   title: string
@@ -113,25 +106,25 @@ export const whyChoose: {
   {
     title: 'Built for professionals',
     description:
-      'Every tool is engineered to enterprise standards — the same primitives, the same polish, from invoice to contract.',
+      'Every invoice is engineered to enterprise standards — clean typography, correct tax math, and a print-ready PDF every time.',
     icon: Briefcase,
   },
   {
     title: 'Compliant by default',
     description:
-      'Region-aware tax rules, sequential numbering, and audit trails keep your paperwork ready for any accountant.',
+      'Region-aware tax rules, GST / VAT splits, sequential numbering, and audit trails keep your invoices ready for any accountant.',
     icon: Landmark,
   },
   {
-    title: 'One workspace, every tool',
+    title: 'One workspace for billing',
     description:
-      'Clients, branding, and history stay in sync across all 40+ tools. No re-entering the same data twice.',
+      'Clients, branding, and history stay in sync across every invoice you send. No re-entering the same data twice.',
     icon: Building2,
   },
   {
     title: 'Loved by teams',
     description:
-      'From solo freelancers to finance teams of fifty, roles and shared templates keep everyone aligned.',
+      'From solo freelancers to finance teams, roles and shared templates keep everyone billing consistently.',
     icon: Users,
   },
 ]
@@ -161,8 +154,8 @@ export const plans: {
     price: '$0',
     cadence: 'forever',
     description: 'Everything you need to send your first professional invoice.',
-    features: ['3 documents / month', 'Core templates', 'PDF export', 'Email support'],
-    cta: 'Start free',
+    features: ['3 invoices / month', 'Core templates', 'PDF export', 'Email support'],
+    cta: 'Create an invoice',
   },
   {
     name: 'Pro',
@@ -170,8 +163,8 @@ export const plans: {
     cadence: 'per month',
     description: 'For freelancers and growing businesses that bill regularly.',
     features: [
-      'Unlimited documents',
-      'All 40+ tools & templates',
+      'Unlimited invoices',
+      'All invoice templates & branding',
       'Custom branding & logo',
       'Recurring invoices',
       'Priority support',
@@ -203,16 +196,16 @@ export const testimonials: {
 }[] = [
   {
     quote:
-      'We replaced three separate tools with ToolForge. Invoicing that used to take an afternoon now takes minutes, and everything matches our brand.',
+      'We switched to Bill Maker for invoicing. What used to take an afternoon now takes minutes, and every invoice matches our brand.',
     name: 'Maya Okafor',
-    role: 'Founder, Studio Meridian',
+    role: 'Founder, Example Business',
     initials: 'MO',
   },
   {
     quote:
       'The tax handling alone is worth it. Cross-border invoices are calculated correctly every time — our accountant stopped emailing us.',
     name: 'Daniel Reyes',
-    role: 'Finance Lead, Cadence Labs',
+    role: 'Finance Lead, Sample Company',
     initials: 'DR',
   },
   {
@@ -231,32 +224,31 @@ export const faqs: { question: string; answer: string }[] = [
       'No. You can create and download a professional invoice as a guest. Creating a free account lets you save clients, reuse templates, and track what you have sent.',
   },
   {
-    question: 'Is ToolForge really free to start?',
+    question: 'Is Bill Maker really free?',
     answer:
-      'Yes. The Free plan lets you generate documents every month at no cost, forever. Upgrade to Pro only when you need unlimited documents, custom branding, and the full tool library.',
+      'Yes. Create 2 invoices without an account, then 100 invoices every calendar month after a free signup — at no cost. There is no payment and no subscription. Paid plans are planned for the future, but the free plan stays free.',
   },
   {
-    question: 'Can ToolForge handle taxes for my country?',
+    question: 'Can Bill Maker handle taxes for my country?',
     answer:
-      'ToolForge supports VAT, GST, and sales tax across 180+ regions. Set your location once and every line item is calculated to local rules automatically.',
+      'Bill Maker supports GST, VAT, and sales tax with automatic CGST / SGST / IGST splits. Set your rate once and every line item is calculated for you.',
   },
   {
     question: 'Will my invoices look on-brand?',
     answer:
-      'Absolutely. Add your logo, colors, and details once. Your branding is applied consistently across invoices, quotes, receipts, and every other tool.',
+      'Absolutely. Add your logo, brand color, and details once, and your branding is applied consistently across every invoice you create.',
   },
   {
     question: 'How secure is my data?',
     answer:
-      'Your documents are encrypted in transit and at rest. Business plans add SSO, granular roles, and a complete audit log for compliance.',
+      'Your invoices are private to your account, encrypted in transit and at rest. Business plans add SSO, granular roles, and a complete audit log for compliance.',
   },
 ]
 
 export const navLinks: { label: string; href: string }[] = [
-  { label: 'Tools', href: '#featured-tools' },
+  { label: 'Invoice Generator', href: '/invoice/new' },
   { label: 'Templates', href: '#templates' },
   { label: 'Pricing', href: '#pricing' },
-  { label: 'Customers', href: '#testimonials' },
   { label: 'FAQ', href: '#faq' },
 ]
 

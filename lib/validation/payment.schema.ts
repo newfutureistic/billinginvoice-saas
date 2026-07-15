@@ -26,5 +26,14 @@ export const paymentAllocationSchema = z.object({
   amount: z.number().positive(),
 })
 
+/** Body for recording a manual payment against a document (documentId comes from the path). */
+export const recordPaymentBodySchema = z.object({
+  amount: z.coerce.number().positive('Amount must be positive'),
+  method: paymentMethodSchema,
+  reference: z.string().max(200).optional(),
+  receivedAt: z.string().optional(),
+})
+export type RecordPaymentBody = z.infer<typeof recordPaymentBodySchema>
+
 export type PaymentRecordInput = z.infer<typeof paymentRecordSchema>
 export type PaymentAllocationInput = z.infer<typeof paymentAllocationSchema>

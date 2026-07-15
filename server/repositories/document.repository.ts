@@ -86,8 +86,39 @@ export class DocumentRepository extends TenantRepository implements DocumentRepo
     return doc
   }
 
+  /**
+   * Find a live document carrying `number` in the current workspace.
+   *
+   * Uses `activeScope`, so the lookup is workspace-scoped (numbers may repeat across
+   * workspaces) and ignores soft-deleted documents (a deleted invoice must not reserve its
+   * number forever). `excludeId` lets an edit ignore the document being edited.
+   */
+  findByNumber(number: string, excludeId?: string): Promise<Document | null> {
+    return this.run(() =>
+      this.db.document.findFirst({
+        where: this.activeScope<Prisma.DocumentWhereInput>({
+          number,
+          ...(excludeId ? { NOT: { id: excludeId } } : {}),
+        }),
+      }),
+    )
+  }
+
   count(filter: DocumentFilter = {}): Promise<number> {
     return this.run(() => this.db.document.count({ where: this.where(filter) }))
+  }
+
+  /**
+   * Number of invoices this workspace has *created* since `since`. Deliberately includes
+   * soft-deleted rows (no `deletedAt` filter) so that deleting an invoice does NOT restore
+   * the monthly quota — only successful creation counts (Phase 1 free-access rule).
+   */
+  countInvoicesCreatedSince(since: Date): Promise<number> {
+    return this.run(() =>
+      this.db.document.count({
+        where: { workspaceId: this.workspaceId, type: 'INVOICE', createdAt: { gte: since } },
+      }),
+    )
   }
 
   list(

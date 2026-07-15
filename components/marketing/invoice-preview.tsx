@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const lineItems = [
@@ -43,14 +43,26 @@ export function InvoicePreview() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-token-xl">
+        {/* Browser chrome — frames the real invoice preview as a product mockup */}
+        <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+          <span className="flex gap-1.5" aria-hidden>
+            <span className="size-2.5 rounded-full bg-destructive/40" />
+            <span className="size-2.5 rounded-full bg-warning/50" />
+            <span className="size-2.5 rounded-full bg-success/50" />
+          </span>
+          <span className="mx-auto inline-flex items-center gap-1.5 rounded-md bg-background px-3 py-1 text-[0.7rem] font-medium text-muted-foreground shadow-token-xs">
+            <Lock className="size-3" aria-hidden />
+            bill-maker.com/invoice
+          </span>
+        </div>
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
           <div>
             <div className="flex items-center gap-2">
               <span className="flex size-7 items-center justify-center rounded-md bg-primary text-[0.7rem] font-semibold text-primary-foreground">
-                SM
+                YC
               </span>
-              <span className="text-sm font-semibold text-foreground">Studio Meridian</span>
+              <span className="text-sm font-semibold text-foreground">Your Company</span>
             </div>
             <p className="mt-2 font-mono text-xs text-muted-foreground">INV-2048</p>
           </div>
@@ -66,8 +78,8 @@ export function InvoicePreview() {
         <div className="grid grid-cols-2 gap-4 px-6 py-4 text-xs">
           <div>
             <p className="text-muted-foreground">Billed to</p>
-            <p className="mt-1 font-medium text-foreground">Northwind Co.</p>
-            <p className="text-muted-foreground">accounts@northwind.com</p>
+            <p className="mt-1 font-medium text-foreground">Demo Client</p>
+            <p className="text-muted-foreground">billing@democlient.com</p>
           </div>
           <div className="text-right">
             <p className="text-muted-foreground">Issued</p>

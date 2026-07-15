@@ -42,6 +42,11 @@ export const documentCreateSchema = z.object({
   notes: z.string().max(2000).optional(),
   terms: z.string().max(2000).optional(),
   paymentInstructions: z.string().max(2000).optional(),
+  // Persisted JSON facets (existing Document columns). Flexible objects so the frozen
+  // builder can round-trip every business field without new tables/columns.
+  branding: z.record(z.string(), z.unknown()).optional(),
+  bankDetails: z.record(z.string(), z.unknown()).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const documentUpdateSchema = documentCreateSchema.partial()

@@ -21,11 +21,11 @@ export {
   type NotificationDispatch,
 } from '@/server/services/notification.service'
 export {
+  SupabaseStorageService,
   UnavailableStorageService,
   storageService,
   type StorageService,
   type SignedUpload,
-  type UploadRequest,
 } from '@/server/services/storage.service'
 
 // --- Identity & access (Mission 4) -----------------------------------------
@@ -63,3 +63,27 @@ export { DashboardService } from '@/server/services/dashboard.service'
 export { SearchService } from '@/server/services/search.service'
 export { NotificationFeedService } from '@/server/services/notification-feed.service'
 export { ProfileService } from '@/server/services/profile.service'
+
+// --- Storage, PDF & Email (Mission 7) --------------------------------------
+export {
+  FileService,
+  type CreateUploadInput,
+  type UploadTicket,
+  type CommitInput,
+  type DownloadUrl,
+} from '@/server/services/file.service'
+export { PdfService, type PdfResult } from '@/server/services/pdf.service'
+export {
+  EmailService,
+  type SendEmailInput,
+  type SendResult,
+} from '@/server/services/email.service'
+export {
+  QrService,
+  qrPngBytes,
+  qrSvg,
+  qrDataUrl,
+  type QrFormat,
+  type QrOptions,
+  type QrStoreResult,
+} from '@/server/services/qr.service'

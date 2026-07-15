@@ -6,9 +6,9 @@ import { HelpSearch } from '@/components/site/help-search'
 import { helpCategories, popularArticles } from '@/lib/site-data'
 
 export const metadata: Metadata = {
-  title: 'Help center — ToolForge',
+  title: 'Help center — Bill Maker',
   description:
-    'Guides, answers, and troubleshooting for ToolForge. Search the knowledge base or browse by topic.',
+    'Guides, answers, and troubleshooting for Bill Maker. Search the knowledge base or browse by topic.',
 }
 
 export default function HelpPage() {

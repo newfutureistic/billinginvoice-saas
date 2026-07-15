@@ -84,6 +84,9 @@ export interface DocumentDetailDTO extends DocumentOutputDTO {
   discount: Prisma.JsonValue
   shipping: Prisma.JsonValue
   paymentInstructions: string | null
+  branding: Prisma.JsonValue
+  bankDetails: Prisma.JsonValue
+  payload: Prisma.JsonValue
 }
 
 export function toDocumentDetailDTO(doc: DocumentWithItems): DocumentDetailDTO {
@@ -94,5 +97,8 @@ export function toDocumentDetailDTO(doc: DocumentWithItems): DocumentDetailDTO {
     discount: doc.discount,
     shipping: doc.shipping,
     paymentInstructions: doc.paymentInstructions,
+    branding: doc.branding,
+    bankDetails: doc.bankDetails,
+    payload: doc.payload,
   }
 }

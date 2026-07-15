@@ -1,23 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AuthForm, AuthInput } from '@/components/auth/auth-form'
 import { authTexts } from '@/lib/auth-data'
+import { http } from '@/lib/api/http'
+import { ApiError } from '@/lib/api/errors'
 
 const text = authTexts.resetPassword
 
 export default function ResetPasswordPage() {
+  const [token, setToken] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [reset, setReset] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    setToken(new URLSearchParams(window.location.search).get('token') ?? '')
+  }, [])
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setError(null)
+    if (!token) {
+      setError('This reset link is invalid or has expired. Request a new one.')
+      return
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await http.post('/auth/reset-password', { token, password })
       setReset(true)
-    }, 1000)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not reset your password. Please try again.')
+      setLoading(false)
+    }
   }
 
   if (reset) {
@@ -32,10 +54,7 @@ export default function ResetPasswordPage() {
             Your password has been reset successfully.
           </p>
         </div>
-        <Link
-          href="/auth/sign-in"
-          className="inline-block font-medium text-brand hover:underline"
-        >
+        <Link href="/auth/sign-in" className="inline-block font-medium text-brand hover:underline">
           {text.backToSignIn}
         </Link>
       </div>
@@ -44,6 +63,11 @@ export default function ResetPasswordPage() {
 
   return (
     <>
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
       <AuthForm
         title={text.title}
         subtitle={text.subtitle}
@@ -52,8 +76,8 @@ export default function ResetPasswordPage() {
         onSubmit={handleSubmit}
       >
         <div className="space-y-4">
-          <AuthInput label={text.passwordLabel} placeholder={text.passwordPlaceholder} type="password" />
-          <AuthInput label={text.confirmLabel} placeholder={text.confirmPlaceholder} type="password" />
+          <AuthInput label={text.passwordLabel} placeholder={text.passwordPlaceholder} type="password" name="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <AuthInput label={text.confirmLabel} placeholder={text.confirmPlaceholder} type="password" name="confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </div>
       </AuthForm>
 

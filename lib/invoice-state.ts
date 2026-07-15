@@ -9,9 +9,9 @@ export const MOCK_INVOICE: InvoiceData = {
   status: 'draft',
 
   business: {
-    businessName: 'ToolForge Inc.',
+    businessName: 'Bill Maker Inc.',
     ownerName: 'Sarah Chen',
-    email: 'sarah@toolforge.app',
+    email: 'sarah@bill-maker.com',
     phone: '+1 (555) 123-4567',
     address: '123 Innovation Drive',
     city: 'San Francisco',
@@ -19,6 +19,11 @@ export const MOCK_INVOICE: InvoiceData = {
     zipCode: '94105',
     country: 'United States',
     taxId: '12-3456789',
+    // Checksum-valid placeholder: the old '…1Z5' was structurally correct but failed the GSTIN
+    // mod-36 check digit, which blocked the wizard on Step 1 out of the box.
+    gstin: '29ABCDE1234F1ZW',
+    pan: 'ABCDE1234F',
+    website: 'https://bill-maker.com',
     businessType: 'Technology',
   },
 
@@ -33,12 +38,15 @@ export const MOCK_INVOICE: InvoiceData = {
     zipCode: '10001',
     country: 'United States',
     taxId: '98-7654321',
+    // Checksum-valid placeholder (see the note on the business GSTIN above).
+    gstin: '27FGHIJ5678K1Z1',
   },
 
   items: [
     {
       id: '1',
       description: 'Web Development Services - UI/UX Design & Frontend',
+      hsn: '998314',
       quantity: 40,
       rate: 150,
       unit: 'hours',
@@ -46,6 +54,7 @@ export const MOCK_INVOICE: InvoiceData = {
     {
       id: '2',
       description: 'API Integration & Backend Setup',
+      hsn: '998314',
       quantity: 20,
       rate: 200,
       unit: 'hours',
@@ -53,6 +62,7 @@ export const MOCK_INVOICE: InvoiceData = {
     {
       id: '3',
       description: 'Testing & Quality Assurance',
+      hsn: '998313',
       quantity: 10,
       rate: 125,
       unit: 'hours',
@@ -75,6 +85,7 @@ export const MOCK_INVOICE: InvoiceData = {
     type: 'GST',
     rate: 10,
     basis: 'exclusive',
+    supplyType: 'intra',
   },
   total: 8550,
 
@@ -91,11 +102,31 @@ export const MOCK_INVOICE: InvoiceData = {
     'Payment is due within 30 days of the invoice date. Late payments may incur a 1.5% monthly interest charge.',
   paymentInstructions: 'Please transfer funds to the bank account details provided below.',
   bankDetails: {
-    accountName: 'ToolForge Inc.',
+    accountName: 'Bill Maker Inc.',
     accountNumber: '9876543210',
     routingNumber: '123456789',
     bankName: 'Tech Bank USA',
+    ifsc: 'HDFC0001234',
+    swift: 'HDFCINBB',
+    iban: '',
+    branch: 'MG Road',
   },
+  qrCode: 'https://pay.bill-maker.com/INV-2024-001',
+
+  upiId: 'billmaker@okhdfcbank',
+  upiPayeeName: 'Bill Maker Inc.',
+  upiIncludeAmount: true,
+
+  signatureLabel: 'Authorized Signatory',
+
+  invoicePrefix: 'INV',
+  poNumber: '',
+  referenceNumber: '',
+  paymentMethod: 'bank',
+  paymentStatus: 'unpaid',
+  additionalCharges: { label: 'Additional charge', amount: 0, applied: false },
+  roundOff: false,
+  watermark: '',
 
   lastModified: new Date().toISOString(),
   createdAt: new Date().toISOString(),
@@ -129,7 +160,9 @@ export function calculateInvoiceTotals(invoice: InvoiceData): Omit<InvoiceData, 
     }
   }
 
-  const total = invoice.tax.basis === 'exclusive' ? subtotalBeforeTax + tax : subtotalBeforeTax
+  const additional = invoice.additionalCharges?.applied ? invoice.additionalCharges.amount : 0
+  let total = (invoice.tax.basis === 'exclusive' ? subtotalBeforeTax + tax : subtotalBeforeTax) + additional
+  if (invoice.roundOff) total = Math.round(total)
 
   return {
     ...invoice,

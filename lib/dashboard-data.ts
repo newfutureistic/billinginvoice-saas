@@ -233,8 +233,8 @@ export const mockProducts: Product[] = [
   },
   {
     id: '2',
-    name: 'Quote Generator',
-    description: 'Professional quote creation tool',
+    name: 'Invoice Pro Pack',
+    description: 'Advanced invoice template pack',
     price: 39.99,
     quantity: 87,
     sku: 'PROD-002',
@@ -242,8 +242,8 @@ export const mockProducts: Product[] = [
   },
   {
     id: '3',
-    name: 'Contract Templates',
-    description: 'Legally reviewed contract templates',
+    name: 'Receipt Template Pack',
+    description: 'Professional receipt templates',
     price: 49.99,
     quantity: 56,
     sku: 'PROD-003',
@@ -407,7 +407,7 @@ export const mockUserProfile = {
   email: 'sarah@company.com',
   role: 'Admin',
   avatar: 'SJ',
-  company: 'ToolForge Co',
+  company: 'Bill Maker Co',
   phone: '+1 (555) 123-4567',
   timezone: 'America/New_York',
 }

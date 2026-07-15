@@ -23,12 +23,12 @@ export function OverviewSection() {
           Foundation · v1.0
         </span>
         <h1 className="mt-6 text-pretty text-5xl font-semibold tracking-[-0.03em] text-foreground lg:text-6xl">
-          The ToolForge Design System
+          The Bill Maker Design System
         </h1>
         <p className="mt-6 text-pretty text-lg leading-relaxed text-muted-foreground lg:text-xl">
           A premium, enterprise-grade visual foundation. Every token, type style, and
           component here is handcrafted to feel calm, confident, and timeless — the
-          groundwork every future ToolForge product is built on.
+          groundwork every future Bill Maker product is built on.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a

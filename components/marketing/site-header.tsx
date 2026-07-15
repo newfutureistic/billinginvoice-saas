@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Menu, X, Zap } from 'lucide-react'
+import Image from 'next/image'
+import { Menu, X } from 'lucide-react'
 import { navLinks } from '@/lib/marketing-content'
 import { cn } from '@/lib/utils'
 
@@ -26,13 +27,15 @@ export function SiteHeader() {
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <a href="#top" className="flex items-center gap-2.5">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-token-sm">
-            <Zap className="size-4" fill="currentColor" strokeWidth={0} />
-          </span>
-          <span className="text-[0.95rem] font-semibold tracking-[-0.01em] text-foreground">
-            ToolForge
-          </span>
+        <a href="#top" className="flex items-center" aria-label="Bill Maker — home">
+          <Image
+            src="/logo.png"
+            alt="Bill Maker"
+            width={2109}
+            height={746}
+            sizes="150px"
+            className="h-8 w-auto mix-blend-multiply"
+          />
         </a>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
@@ -49,13 +52,13 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <a
-            href="/login"
+            href="/auth/sign-in"
             className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             Sign in
           </a>
           <a
-            href="/tools/invoice-generator"
+            href="/invoice/new"
             className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-token-sm transition-colors hover:bg-primary/90"
           >
             Get started
@@ -88,13 +91,13 @@ export function SiteHeader() {
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
               <a
-                href="/login"
+                href="/auth/sign-in"
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 Sign in
               </a>
               <a
-                href="/tools/invoice-generator"
+                href="/invoice/new"
                 className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
               >
                 Get started
