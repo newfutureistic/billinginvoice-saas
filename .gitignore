@@ -81,3 +81,7 @@ pids
 MISSION_*.md
 PHASE_*_*.md
 QA_REPORT.md
+
+# TypeScript incremental build cache (machine-specific, regenerated on every build)
+tsconfig.tsbuildinfo
+*.tsbuildinfo

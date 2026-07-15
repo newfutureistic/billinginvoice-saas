@@ -42,15 +42,52 @@ loadDotEnv(['.env.local', '.env'])
 // --- Schema -----------------------------------------------------------------
 const isPostgresUrl = (v: string) => v.startsWith('postgres://') || v.startsWith('postgresql://')
 
+/**
+ * Normalise a connection string coming from the environment.
+ *
+ * The `.env` loader above strips surrounding quotes, but a hosting provider (Netlify, Vercel,
+ * Docker…) injects `process.env` verbatim. Pasting a value straight out of `.env` — quotes and
+ * all — therefore passed locally and failed in CI with a confusing "must be a postgres(ql)://
+ * connection string", because the value actually began with `"`. Trimming whitespace and a
+ * single pair of wrapping quotes makes both paths behave identically.
+ */
+const normaliseConnectionString = (v: unknown): unknown => {
+  if (typeof v !== 'string') return v
+  const trimmed = v.trim()
+  const unquoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ? trimmed.slice(1, -1).trim()
+      : trimmed
+  return unquoted
+}
+
+/** Describe a bad value without ever leaking the password it contains. */
+const safeHint = (v: unknown): string => {
+  if (typeof v !== 'string' || v === '') return 'empty'
+  const scheme = v.split('://')[0]
+  return `starts with ${JSON.stringify(scheme.slice(0, 12))}`
+}
+
+/** Reject a non-postgres value with a message that names the problem without leaking secrets. */
+const postgresCheck = (name: string, allowEmpty: boolean) =>
+  z.string().superRefine((v, ctx) => {
+    if (allowEmpty && v === '') return
+    if (isPostgresUrl(v)) return
+    ctx.addIssue({
+      code: 'custom',
+      message: `${name} must be a postgres(ql):// connection string (${safeHint(v)}). If you copied it from .env, remove the surrounding quotes.`,
+    })
+  })
+
 const EnvSchema = z.object({
-  DATABASE_URL: z
-    .string()
-    .min(1, 'DATABASE_URL is required')
-    .refine(isPostgresUrl, 'DATABASE_URL must be a postgres(ql):// connection string'),
-  DIRECT_URL: z
-    .string()
-    .refine((v) => v === '' || isPostgresUrl(v), 'DIRECT_URL must be a postgres(ql):// connection string')
-    .optional(),
+  DATABASE_URL: z.preprocess(
+    normaliseConnectionString,
+    z.string().min(1, 'DATABASE_URL is required').pipe(postgresCheck('DATABASE_URL', false)),
+  ),
+  DIRECT_URL: z.preprocess(
+    normaliseConnectionString,
+    postgresCheck('DIRECT_URL', true).optional(),
+  ),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PRISMA_LOG_QUERIES: z
     .enum(['true', 'false'])
