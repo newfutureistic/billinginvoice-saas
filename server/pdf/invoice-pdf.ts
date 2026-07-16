@@ -571,9 +571,17 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     page.drawSvgPath('M 0 0 L 132 0 L 0 132 Z', { x: 0, y: H, color: mix(P.primary, rgb(0, 0, 0), 0.22) })
     let ly = H - 52
     if (logo) {
-      const d = logo.scaleToFit(120, 34)
-      page.drawImage(logo, { x: M, y: H - 28 - d.height, width: d.width, height: d.height })
-      ly = H - 38 - d.height
+      // The old placement put the name's cap-height inside the logo's box (name top landed at
+      // H-24-d.height, above the logo's H-28-d.height bottom edge), so they overlapped. The
+      // logo now sits on its own line as a white brand chip — logos carry a baked light
+      // background, which would otherwise read as a torn sticker on the purple field — and the
+      // name clears it by a real gap instead of a guessed offset.
+      const d = logo.scaleToFit(110, 30)
+      const logoTop = H - 26
+      rrect(M - 6, logoTop + 6, d.width + 12, d.height + 12, { fill: rgb(1, 1, 1), r: 5 })
+      page.drawImage(logo, { x: M, y: logoTop - d.height, width: d.width, height: d.height })
+      const CAP_19 = 14 // cap height of the 19pt name below
+      ly = logoTop - d.height - 14 - CAP_19
     }
     T(input.issuer.name || 'Business', M, ly, 19, bold, P.onPrimary)
     ly -= 15
