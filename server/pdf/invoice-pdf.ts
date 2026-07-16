@@ -522,8 +522,20 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
   } else if (P.layout === 'fintech') {
     /* DARK — fintech dashboard: no hero band. A compact brand bar, then a full-width
        "AMOUNT DUE" stat panel that carries the headline number at the TOP of the page. */
-    T(input.issuer.name || 'Business', M, H - M - 8, 13, bold, P.strong)
-    T(input.issuer.lines.slice(0, 2).join('   '), M, H - M - 21, 7.6, font, P.muted)
+    // Logo sits inline at the left of the brand bar, vertically inside the name+lines block, and
+    // the text shifts right of it — otherwise it overlapped the issuer lines. Without this the
+    // uploaded logo was silently dropped from this template entirely.
+    let nameX = M
+    if (logo) {
+      const d = logo.scaleToFit(84, 22)
+      // Logos usually ship with a baked light background, which reads as a pasted white box on
+      // the dark canvas; a small white plate makes it look like an intentional brand chip.
+      rrect(M - 5, H - M + 1, d.width + 10, d.height + 10, { fill: rgb(1, 1, 1), r: 4 })
+      page.drawImage(logo, { x: M, y: H - M - 4 - d.height, width: d.width, height: d.height })
+      nameX = M + d.width + 14
+    }
+    T(input.issuer.name || 'Business', nameX, H - M - 8, 13, bold, P.strong)
+    T(input.issuer.lines.slice(0, 2).join('   '), nameX, H - M - 21, 7.6, font, P.muted)
     Rt(title, RX, H - M - 8, 11, bold, P.accent)
     Rt(input.number, RX, H - M - 23, 8.4, font, P.muted)
     let sy = H - M - 44
@@ -668,11 +680,19 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     y = ly - 24
   } else {
     // SWISS minimal
-    const topY = H - M
-    T('INVOICE', M, topY, 9, bold, P.muted)
+    let topY = H - M
+    // The logo sits above the label; without this the uploaded logo was silently dropped from
+    // this template entirely. Kept small and quiet so the Swiss composition still reads.
+    if (logo) {
+      const d = logo.scaleToFit(104, 28)
+      page.drawImage(logo, { x: M, y: topY - d.height, width: d.width, height: d.height })
+      topY -= d.height + 16
+    }
+    // `title`, not a hardcoded 'INVOICE' — this template ignored the custom Document Title.
+    T(title, M, topY, 9, bold, P.muted)
     T(input.number, M, topY - 22, 26, bold, P.strong)
     // right meta grid
-    let my = topY
+    let my = H - M
     for (const [k, v] of metaPairs.filter(([k]) => !/Invoice No/i.test(k)).slice(0, 6)) {
       T(k, RX - 170, my, 8, font, P.faint)
       Rt(v, RX, my, 8.6, bold, P.strong)

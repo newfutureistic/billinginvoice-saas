@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               width={2109}
               height={746}
               sizes="150px"
-              className="h-8 w-auto mix-blend-multiply"
+              className="h-11 w-auto mix-blend-multiply"
             />
           </Link>
         </div>

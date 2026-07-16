@@ -221,7 +221,9 @@ export function Step9Branding({
             <span className="text-sm font-medium text-foreground">
               Drop your logo here, or <span className="text-brand">click to browse</span>
             </span>
-            <span className="text-xs text-muted-foreground">PNG, JPG, SVG or WebP · up to 2MB</span>
+            {/* Must match LOGO_MIMES/MAX_LOGO_BYTES: the PDF engine embeds raster PNG/JPEG only,
+                so promising SVG or WebP here got those files rejected on upload. */}
+            <span className="text-xs text-muted-foreground">PNG or JPG · up to 2MB</span>
           </button>
         )}
 
@@ -285,7 +287,9 @@ export function Step9Branding({
             <span className="text-sm font-medium text-foreground">
               Upload signature <span className="text-brand">(PNG or JPG)</span>
             </span>
-            <span className="text-xs text-muted-foreground">Shown above the authorized-signatory line</span>
+            <span className="text-xs text-muted-foreground">
+              Shown above the authorized-signatory line · up to 1MB
+            </span>
           </button>
         )}
 

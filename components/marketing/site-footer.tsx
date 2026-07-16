@@ -53,7 +53,7 @@ export function SiteFooter() {
                 width={2109}
                 height={746}
                 sizes="170px"
-                className="h-9 w-auto mix-blend-multiply"
+                className="h-12 w-auto mix-blend-multiply"
               />
             </a>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
