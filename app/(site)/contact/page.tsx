@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Mail, MessageCircle, BookOpen, MapPin } from 'lucide-react'
+import { Mail, BookOpen, MapPin } from 'lucide-react'
 import { PageHero } from '@/components/site/page-hero'
 import { ContactForm } from '@/components/site/contact-form'
 
@@ -19,13 +19,6 @@ const channels = [
     description: 'billmaker.business@gmail.com',
     href: 'mailto:billmaker.business@gmail.com',
     cta: 'Send an email',
-  },
-  {
-    icon: MessageCircle,
-    title: 'Live chat',
-    description: 'Available Mon–Fri, 9am–6pm ET',
-    href: '#',
-    cta: 'Start a chat',
   },
   {
     icon: BookOpen,
