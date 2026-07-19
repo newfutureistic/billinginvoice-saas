@@ -151,6 +151,20 @@ export const MAX_LOGO_BYTES = 2 * 1024 * 1024 // 2 MB
 export const MAX_SIGNATURE_BYTES = 1 * 1024 * 1024 // 1 MB
 export const MAX_QR_BYTES = 1 * 1024 * 1024 // 1 MB
 
+/**
+ * Base64 inflates raw bytes by ~4/3, plus the `data:image/png;base64,` prefix. A schema that
+ * caps the data-URL *string* length in raw-byte units (as the render-pdf request schema used to)
+ * silently rejects logos the upload UI itself allows — the request just fails validation and the
+ * preview quietly falls back to the last good (logo-less) render. Derive the string cap from the
+ * byte cap so the two limits can never drift apart again.
+ */
+function maxDataUrlChars(maxBytes: number): number {
+  return Math.ceil(maxBytes / 3) * 4 + 64 // +64 headroom for the `data:<mime>;base64,` prefix
+}
+
+export const MAX_LOGO_DATA_URL_CHARS = maxDataUrlChars(MAX_LOGO_BYTES)
+export const MAX_SIGNATURE_DATA_URL_CHARS = maxDataUrlChars(MAX_SIGNATURE_BYTES)
+
 function prettyBytes(n: number): string {
   return n >= 1024 * 1024 ? `${Math.round(n / (1024 * 1024))} MB` : `${Math.round(n / 1024)} KB`
 }

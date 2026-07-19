@@ -6,6 +6,7 @@ import { defaultRateLimiter } from '@/server/http/middleware/rate-limit'
 import { amountInWords, resolveInvoiceQr, taxLines } from '@/lib/invoice-format'
 import { validateInvoiceData } from '@/lib/invoice-validation'
 import { templateSpec } from '@/lib/invoice-template-spec'
+import { MAX_LOGO_DATA_URL_CHARS, MAX_SIGNATURE_DATA_URL_CHARS } from '@/lib/validation/formats'
 import type { Currency } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -100,9 +101,9 @@ const renderSchema = z.object({
   upiId: z.string().max(256).nullish(),
   upiPayeeName: z.string().max(256).nullish(),
   upiIncludeAmount: z.boolean().optional(),
-  signatureUrl: z.string().max(2_000_000).nullish(),
+  signatureUrl: z.string().max(MAX_SIGNATURE_DATA_URL_CHARS).nullish(),
   signatureLabel: z.string().max(120).nullish(),
-  logoUrl: z.string().max(2_000_000).nullish(),
+  logoUrl: z.string().max(MAX_LOGO_DATA_URL_CHARS).nullish(),
   watermark: z.string().max(60).nullish(),
   brandColor: z.string().optional(),
   brandingSection: z.object({ showBrandColor: z.boolean().optional(), showLogo: z.boolean().optional() }).passthrough().optional(),

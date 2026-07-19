@@ -3,9 +3,11 @@
 import { INVOICE_STEPS } from '@/lib/invoice-state'
 import { INVOICE_TEMPLATES } from '@/lib/invoice-templates'
 import { useInvoice } from '@/lib/hooks/use-invoice'
-import { ChevronDown, RotateCcw, RotateCw, Save, CheckCircle2, AlertCircle, Eye, X } from 'lucide-react'
+import { ChevronDown, RotateCcw, RotateCw, Save, CheckCircle2, AlertCircle, AlertTriangle, Eye, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import type { InvoiceData } from '@/lib/invoice-types'
 import { Step1Business } from './step-1-business'
 import { Step2Client } from './step-2-client'
@@ -59,8 +61,10 @@ export function InvoiceBuilder({
     switchTemplate,
   } = useInvoice(initialInvoice)
 
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const stepCount = INVOICE_STEPS.length
 
   // Real persistence (reuses the Document CRUD via useInvoiceDraft: create-then-update).
@@ -188,6 +192,14 @@ export function InvoiceBuilder({
     return () => window.clearTimeout(id)
   }, [currentStep])
 
+  function handleLogoClick() {
+    if (dirty) {
+      setShowLeaveConfirm(true)
+    } else {
+      router.push('/')
+    }
+  }
+
   const renderStep = (step: number) => {
     switch (step) {
       case 1:
@@ -296,7 +308,17 @@ export function InvoiceBuilder({
       <div className="flex flex-col w-full lg:w-1/2 border-r border-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-20">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleLogoClick}
+              className="flex shrink-0 items-center rounded transition-opacity hover:opacity-80"
+              aria-label="Bill Maker — back to homepage"
+              title="Back to homepage"
+            >
+              <Image src="/logo.png" alt="Bill Maker" width={2109} height={746} className="h-6 w-auto" priority />
+            </button>
+            <div className="h-5 w-px bg-border" aria-hidden />
             <h1 className="text-xl font-bold text-foreground">{invoice.invoiceNumber}</h1>
             {isSaving ? (
               <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1" role="status">
@@ -490,6 +512,48 @@ export function InvoiceBuilder({
         </div>
         <InvoicePreview invoice={invoice} mode={previewMode} />
       </div>
+
+      {/* Leave-with-unsaved-changes confirmation (logo click) */}
+      {showLeaveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="leave-confirm-title"
+        >
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-token-md">
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-warning/10 text-warning">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 id="leave-confirm-title" className="font-semibold text-foreground">
+                  Leave without saving?
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You have unsaved changes on this invoice. If you leave now, they will be lost.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirm(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                Stay on this page
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push('/')}
+                className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90"
+              >
+                Leave anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile preview overlay (additive; desktop 2-panel layout unchanged) */}
       {showMobilePreview && (

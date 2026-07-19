@@ -352,20 +352,26 @@ export function Step10Preview({
 
   async function handleView() {
     if (blockedByGuestLimit()) return
+    // Open the tab synchronously, inside the click handler — a browser only trusts a popup as
+    // "user-initiated" if it opens before the first `await`. Opening it after the PDF finishes
+    // rendering loses that trust and gets silently blocked, so we open a blank tab now and point
+    // it at the blob once it's ready.
+    const pending = window.open('', '_blank')
     setBusy('view')
     setNotice(null)
     try {
       const blob = await renderPdfBlob()
-      // Open the freshly generated PDF inline in a new browser tab. A blob: URL renders in the
-      // browser's built-in PDF viewer reliably — unlike opening a downloaded local file, which
-      // some browsers refuse to render. This is the dependable way to *see* the invoice.
+      // A blob: URL renders in the browser's built-in PDF viewer reliably — unlike opening a
+      // downloaded local file, which some browsers refuse to render.
       const url = URL.createObjectURL(blob)
-      const w = window.open(url, '_blank')
-      if (!w) {
+      if (pending) {
+        pending.location.href = url
+      } else {
         setNotice({ type: 'error', msg: 'Allow pop-ups to open the PDF in a new tab, or use Download.' })
       }
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch {
+      pending?.close()
       setNotice({ type: 'error', msg: 'Could not open the PDF. Please try again.' })
     } finally {
       setBusy(null)
@@ -400,16 +406,21 @@ export function Step10Preview({
 
   async function handlePrint() {
     if (blockedByGuestLimit()) return
+    const pending = window.open('', '_blank')
     setBusy('print')
     setNotice(null)
     try {
       const blob = await renderPdfBlob()
       const url = URL.createObjectURL(blob)
-      const w = window.open(url, '_blank')
-      if (w) w.addEventListener('load', () => w.print())
-      else setNotice({ type: 'error', msg: 'Allow pop-ups to print, or use Download.' })
+      if (pending) {
+        pending.addEventListener('load', () => pending.print())
+        pending.location.href = url
+      } else {
+        setNotice({ type: 'error', msg: 'Allow pop-ups to print, or use Download.' })
+      }
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch {
+      pending?.close()
       setNotice({ type: 'error', msg: 'Could not open the print view.' })
     } finally {
       setBusy(null)
