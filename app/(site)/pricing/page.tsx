@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'Pricing — Bill Maker',
   description:
     'Bill Maker is free to use. Create 2 invoices without an account, then 100 per month after a free signup — no payment, no subscription. Paid plans are coming later.',
+  alternates: { canonical: '/pricing' },
 }
 
 export default function PricingPage() {

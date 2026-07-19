@@ -12,8 +12,8 @@ export function Faq() {
           </h2>
           <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
             Still curious? Reach our team at{' '}
-            <a href="mailto:hello@bill-maker.com" className="font-medium text-brand hover:underline">
-              hello@bill-maker.com
+            <a href="mailto:billmaker.business@gmail.com" className="font-medium text-brand hover:underline">
+              billmaker.business@gmail.com
             </a>
             .
           </p>

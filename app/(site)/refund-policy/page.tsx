@@ -30,7 +30,7 @@ const sections: LegalSection[] = [
   {
     heading: 'How to request a refund',
     paragraphs: [
-      'Email hello@bill-maker.com from the address associated with your account, or reach us through the contact page. Include your account email and the payment you would like refunded. We typically respond within two business days.',
+      'Email billmaker.business@gmail.com from the address associated with your account, or reach us through the contact page. Include your account email and the payment you would like refunded. We typically respond within two business days.',
     ],
   },
   {

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Help center — Bill Maker',
   description:
     'Guides, answers, and troubleshooting for Bill Maker. Search the knowledge base or browse by topic.',
+  alternates: { canonical: '/help' },
 }
 
 export default function HelpPage() {

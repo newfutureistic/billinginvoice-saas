@@ -9,14 +9,15 @@ export const metadata: Metadata = {
   title: 'Contact — Bill Maker',
   description:
     'Get in touch with the Bill Maker team. Sales, support, billing, and partnership inquiries welcome.',
+  alternates: { canonical: '/contact' },
 }
 
 const channels = [
   {
     icon: Mail,
     title: 'Email us',
-    description: 'hello@bill-maker.com',
-    href: 'mailto:hello@bill-maker.com',
+    description: 'billmaker.business@gmail.com',
+    href: 'mailto:billmaker.business@gmail.com',
     cta: 'Send an email',
   },
   {
@@ -78,9 +79,9 @@ export default function ContactPage() {
               </span>
               <p className="mt-4 font-semibold text-foreground">Headquarters</p>
               <p className="mt-1 text-pretty text-sm leading-relaxed text-muted-foreground">
-                128 Market Street, Suite 400
+                Connaught Place
                 <br />
-                San Francisco, CA 94103
+                New Delhi, Delhi 110001, India
               </p>
             </div>
 

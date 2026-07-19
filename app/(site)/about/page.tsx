@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'About — Bill Maker',
   description:
     'Bill Maker builds calm, enterprise-grade paperwork tools for freelancers and small teams. Meet the team and our story.',
+  alternates: { canonical: '/about' },
 }
 
 const stats = [

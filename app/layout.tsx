@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     apple: '/apple-icon.png',
   },
   alternates: { canonical: '/' },
+  verification: {
+    google: '-raYlhX7C8HLHs-axCChPej6KmJLFjvh3w4djbjmaYk',
+  },
   robots: {
     index: true,
     follow: true,

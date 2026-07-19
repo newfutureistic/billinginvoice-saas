@@ -4,6 +4,7 @@ import { LegalPage, type LegalSection } from '@/components/site/legal-page'
 export const metadata: Metadata = {
   title: 'Privacy Policy — Bill Maker',
   description: 'How Bill Maker collects, uses, and protects your personal and business data.',
+  alternates: { canonical: '/privacy' },
 }
 
 const sections: LegalSection[] = [

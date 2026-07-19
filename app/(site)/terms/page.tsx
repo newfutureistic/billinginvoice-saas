@@ -4,6 +4,7 @@ import { LegalPage, type LegalSection } from '@/components/site/legal-page'
 export const metadata: Metadata = {
   title: 'Terms of Service — Bill Maker',
   description: 'The terms and conditions that govern your use of Bill Maker.',
+  alternates: { canonical: '/terms' },
 }
 
 const sections: LegalSection[] = [
