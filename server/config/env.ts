@@ -61,6 +61,22 @@ const normaliseConnectionString = (v: unknown): unknown => {
   return unquoted
 }
 
+/**
+ * `KEY=""` is how this project's `.env` spells "not configured" (see `.env.example`), but an
+ * empty string is a value, not `undefined` — `z.string().min(1).optional()` and
+ * `z.string().email().optional()` both still run their inner check against it and fail. That
+ * failure isn't per-field: `safeParse` rejects the whole object, and the caller's fallback re-
+ * parses `{}` — silently discarding every *other*, correctly-set variable in the same schema
+ * too (this is how a blank `EMAIL_REPLY_TO` was making a real `RESEND_API_KEY` disappear).
+ * Blanking empty strings to `undefined` before validation makes "not configured" behave the
+ * way every optional() field already assumes it does.
+ */
+const emptyStringsToUndefined = (env: NodeJS.ProcessEnv): Record<string, string | undefined> => {
+  const out: Record<string, string | undefined> = {}
+  for (const [k, v] of Object.entries(env)) out[k] = v === '' ? undefined : v
+  return out
+}
+
 /** Describe a bad value without ever leaking the password it contains. */
 const safeHint = (v: unknown): string => {
   if (typeof v !== 'string' || v === '') return 'empty'
@@ -167,7 +183,7 @@ let cachedAuth: AuthEnv | null = null
  */
 export function getAuthEnv(): AuthEnv {
   if (cachedAuth) return cachedAuth
-  const parsed = AuthEnvSchema.safeParse(process.env)
+  const parsed = AuthEnvSchema.safeParse(emptyStringsToUndefined(process.env))
   // Malformed *present* values should surface; missing optional values fall back
   // to schema defaults via a permissive re-parse of an empty object subset.
   cachedAuth = parsed.success ? parsed.data : AuthEnvSchema.parse({})
@@ -218,7 +234,7 @@ let cachedIntegrations: IntegrationsEnv | null = null
 
 export function getIntegrationsEnv(): IntegrationsEnv {
   if (cachedIntegrations) return cachedIntegrations
-  const parsed = IntegrationsEnvSchema.safeParse(process.env)
+  const parsed = IntegrationsEnvSchema.safeParse(emptyStringsToUndefined(process.env))
   cachedIntegrations = parsed.success ? parsed.data : IntegrationsEnvSchema.parse({})
   return cachedIntegrations
 }
