@@ -23,3 +23,12 @@ export function toUserDTO(user: User): UserOutputDTO {
     createdAt: iso(user.createdAt),
   }
 }
+
+/** Site-admin "all users" row — the public user projection plus a platform-wide invoice count. */
+export interface AdminUserDTO extends UserOutputDTO {
+  invoiceCount: number
+}
+
+export function toAdminUserDTO(user: User, invoiceCount: number): AdminUserDTO {
+  return { ...toUserDTO(user), invoiceCount }
+}

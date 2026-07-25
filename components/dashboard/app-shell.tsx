@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Grid3x3,
   Newspaper,
+  UserCog,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -38,9 +39,13 @@ const navItems = [
 const adminItems = [
   { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
   { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
+  { href: '/dashboard/admin/users', icon: UserCog, label: 'All Users' },
   { href: '/dashboard/team', icon: Users, label: 'Team' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
+
+/** Site-global items — only shown to the site-admin allowlist, not every workspace owner. */
+const SITE_ADMIN_ONLY_HREFS = new Set(['/dashboard/blog', '/dashboard/admin/users'])
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -61,9 +66,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const displayName = session?.user?.name || mockUserProfile.name
   const displayEmail = session?.user?.email || mockUserProfile.email
   const avatarText = session?.user?.name?.trim()?.charAt(0).toUpperCase() || mockUserProfile.avatar
-  // The blog CMS is site-global — only show it to site administrators (not every workspace owner).
+  // The blog CMS and the all-users list are site-global — only show them to site admins.
   const visibleAdminItems = adminItems.filter(
-    (item) => item.href !== '/dashboard/blog' || isSiteAdmin(session?.user?.email),
+    (item) => !SITE_ADMIN_ONLY_HREFS.has(item.href) || isSiteAdmin(session?.user?.email),
   )
 
   useEffect(() => {

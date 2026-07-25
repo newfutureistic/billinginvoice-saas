@@ -17,7 +17,7 @@ export const GET = defineRoute<BlogPostDTO | null, undefined, undefined, Params>
   permission: 'blog:manage',
   schema: { params: paramsSchema },
   handler: ({ params, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().getBySlug(params.id)
   },
 })
@@ -28,7 +28,7 @@ export const PATCH = defineRoute<BlogPostDTO, BlogUpdateInput, undefined, Params
   schema: { params: paramsSchema, body: blogUpdateSchema },
   csrf: true,
   handler: ({ params, body, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().update(params.id, body)
   },
 })
@@ -39,7 +39,7 @@ export const DELETE = defineRoute<BlogPostDTO, undefined, undefined, Params>({
   schema: { params: paramsSchema },
   csrf: true,
   handler: ({ params, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().softDelete(params.id)
   },
 })

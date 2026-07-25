@@ -12,7 +12,7 @@ export const GET = defineRoute<PaginatedBlog<BlogListItemDTO>, undefined, BlogLi
   permission: 'blog:manage',
   schema: { query: blogListQuerySchema },
   handler: ({ query, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().adminList(query)
   },
 })
@@ -24,7 +24,7 @@ export const POST = defineRoute<BlogPostDTO, BlogCreateInput>({
   csrf: true,
   status: 201,
   handler: ({ body, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().create(body, { id: ctx.user?.id, name: ctx.user?.name ?? null })
   },
 })

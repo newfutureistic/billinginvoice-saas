@@ -17,7 +17,7 @@ export const POST = defineRoute<BlogPostDTO, undefined, undefined, Params>({
   schema: { params: paramsSchema },
   csrf: true,
   handler: ({ params, ctx }) => {
-    assertSiteAdmin(ctx)
+    assertSiteAdmin(ctx, 'Blog management')
     return new BlogService().restore(params.id)
   },
 })
