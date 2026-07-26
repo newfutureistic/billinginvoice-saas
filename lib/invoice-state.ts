@@ -1,4 +1,28 @@
-import { InvoiceData } from './invoice-types'
+import { InvoiceData, type BusinessDetails } from './invoice-types'
+
+/**
+ * A brand-new invoice's business step starts empty, not pre-filled with `MOCK_INVOICE`'s
+ * sample company. Each field already carries example text via its `placeholder` prop
+ * (Step1Business) — a real value here defeated that: it rendered as normal dark text
+ * indistinguishable from something the user actually typed, so they had to delete it before
+ * entering their own details instead of just typing over a greyed-out example.
+ */
+export const EMPTY_BUSINESS: BusinessDetails = {
+  businessName: '',
+  ownerName: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: '',
+  taxId: '',
+  gstin: '',
+  pan: '',
+  website: '',
+  businessType: '',
+}
 
 export const MOCK_INVOICE: InvoiceData = {
   id: 'inv-001',

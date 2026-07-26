@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { InvoiceData } from '../invoice-types'
-import { MOCK_INVOICE, calculateInvoiceTotals } from '../invoice-state'
+import { MOCK_INVOICE, EMPTY_BUSINESS, calculateInvoiceTotals } from '../invoice-state'
 
 interface InvoiceHistory {
   past: InvoiceData[]
@@ -13,7 +13,9 @@ interface InvoiceHistory {
 export function useInvoice(initialData?: InvoiceData) {
   const [history, setHistory] = useState<InvoiceHistory>({
     past: [],
-    present: initialData ? calculateInvoiceTotals(initialData) as InvoiceData : (calculateInvoiceTotals(MOCK_INVOICE) as InvoiceData),
+    present: initialData
+      ? (calculateInvoiceTotals(initialData) as InvoiceData)
+      : (calculateInvoiceTotals({ ...MOCK_INVOICE, business: EMPTY_BUSINESS }) as InvoiceData),
     future: [],
   })
 
