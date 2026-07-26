@@ -458,17 +458,24 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
         page.drawRectangle({ x: 0, y: heroBot, width: W, height: 3, color: P.accent })
       }
     }
+    // Business name + details lead the block; the logo sits BELOW them rather than above,
+    // so it never crowds the text that identifies who the invoice is from. Its height is
+    // clamped to whatever room is actually left above the meta row — guaranteeing no
+    // overlap regardless of how many address lines the business has.
     let ly = heroTop - 36
-    if (logo) {
-      const d = logo.scaleToFit(140, 40)
-      page.drawImage(logo, { x: M, y: heroTop - 26 - d.height, width: d.width, height: d.height })
-      ly = heroTop - 34 - d.height
-    }
     T(input.issuer.name || 'Business', M, ly, 17, bold, P.onPrimary)
     ly -= 14
     for (const l of input.issuer.lines.slice(0, 3)) {
       T(l, M, ly, 8.4, font, P.onPrimarySoft)
       ly -= 11
+    }
+    if (logo) {
+      const metaFloor = heroBot + 30 // stay clear of the meta row along the bottom of the hero
+      const room = ly - 6 - metaFloor
+      if (room >= 14) {
+        const d = logo.scaleToFit(120, Math.min(40, room))
+        page.drawImage(logo, { x: M, y: ly - 6 - d.height, width: d.width, height: d.height })
+      }
     }
     // Title auto-shrinks so long custom titles (e.g. "Commercial Invoice") never collide
     // with the business block on the left.
