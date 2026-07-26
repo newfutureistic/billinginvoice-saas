@@ -1,4 +1,4 @@
-import { InvoiceData, type BusinessDetails } from './invoice-types'
+import { InvoiceData, type BusinessDetails, type ClientDetails } from './invoice-types'
 
 /**
  * A brand-new invoice's business step starts empty, not pre-filled with `MOCK_INVOICE`'s
@@ -22,6 +22,42 @@ export const EMPTY_BUSINESS: BusinessDetails = {
   pan: '',
   website: '',
   businessType: '',
+}
+
+/** Same fix as {@link EMPTY_BUSINESS}, for the client step. */
+export const EMPTY_CLIENT: ClientDetails = {
+  clientName: '',
+  contactPerson: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  country: '',
+  taxId: '',
+  gstin: '',
+}
+
+/** A single blank line item — matches the shape `addItem()` creates. */
+export const EMPTY_ITEM: InvoiceData['items'][0] = {
+  id: 'item-1',
+  description: '',
+  quantity: 1,
+  rate: 0,
+  unit: 'hours',
+}
+
+/** Same fix as {@link EMPTY_BUSINESS}, for the bank-details fields on the Terms step. */
+export const EMPTY_BANK_DETAILS: InvoiceData['bankDetails'] = {
+  accountName: '',
+  accountNumber: '',
+  routingNumber: '',
+  bankName: '',
+  ifsc: '',
+  swift: '',
+  iban: '',
+  branch: '',
 }
 
 export const MOCK_INVOICE: InvoiceData = {

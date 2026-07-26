@@ -2,7 +2,14 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { InvoiceData } from '../invoice-types'
-import { MOCK_INVOICE, EMPTY_BUSINESS, calculateInvoiceTotals } from '../invoice-state'
+import {
+  MOCK_INVOICE,
+  EMPTY_BUSINESS,
+  EMPTY_CLIENT,
+  EMPTY_ITEM,
+  EMPTY_BANK_DETAILS,
+  calculateInvoiceTotals,
+} from '../invoice-state'
 
 interface InvoiceHistory {
   past: InvoiceData[]
@@ -10,12 +17,39 @@ interface InvoiceHistory {
   future: InvoiceData[]
 }
 
+/**
+ * A brand-new invoice, not `MOCK_INVOICE`'s fully populated sample company. Every field
+ * below has a correct example already written into its `placeholder` prop by the step
+ * components — a real value here rendered as ordinary typed-in text indistinguishable
+ * from something the user entered, so they had to delete "Bill Maker Inc.", "Acme
+ * Corporation", the sample bank account, etc. before entering their own. `MOCK_INVOICE`
+ * itself stays untouched: `/invoice/preview`'s demo and `invoice-document.ts`'s
+ * structural defaults (template, brandColor, the invoiceNumber sentinel check) still rely
+ * on the full sample data.
+ */
+function newInvoiceDefault(): InvoiceData {
+  return {
+    ...MOCK_INVOICE,
+    business: EMPTY_BUSINESS,
+    client: EMPTY_CLIENT,
+    items: [EMPTY_ITEM],
+    notes: '',
+    terms: '',
+    paymentInstructions: '',
+    bankDetails: EMPTY_BANK_DETAILS,
+    qrCode: undefined,
+    upiId: undefined,
+    upiPayeeName: undefined,
+    additionalCharges: { label: '', amount: 0, applied: false },
+  }
+}
+
 export function useInvoice(initialData?: InvoiceData) {
   const [history, setHistory] = useState<InvoiceHistory>({
     past: [],
     present: initialData
       ? (calculateInvoiceTotals(initialData) as InvoiceData)
-      : (calculateInvoiceTotals({ ...MOCK_INVOICE, business: EMPTY_BUSINESS }) as InvoiceData),
+      : (calculateInvoiceTotals(newInvoiceDefault()) as InvoiceData),
     future: [],
   })
 
