@@ -499,18 +499,20 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     }
     y = heroBot - 18
   } else if (P.layout === 'sidebar') {
-    // Sidebar branding column
+    // Sidebar branding column. Business name + details lead the block; the logo sits below
+    // them, using the same flowing `sy` cursor as everything else in the column, so it can
+    // never overlap regardless of how many lines the business has.
     let sy = H - 44
-    if (logo) {
-      const d = logo.scaleToFit(SIDEBAR_W - 56, 46)
-      page.drawImage(logo, { x: 28, y: H - 34 - d.height, width: d.width, height: d.height })
-      sy = H - 40 - d.height
-    }
     T(input.issuer.name || 'Business', 28, sy, 13.5, bold, P.onPrimary)
     sy -= 15
     for (const l of input.issuer.lines.slice(0, 4)) {
       T(l, 28, sy, 8, font, P.onPrimarySoft)
       sy -= 10.5
+    }
+    if (logo) {
+      const d = logo.scaleToFit(SIDEBAR_W - 56, 40)
+      page.drawImage(logo, { x: 28, y: sy - 6 - d.height, width: d.width, height: d.height })
+      sy -= 6 + d.height
     }
     sy -= 16
     // vertical accent tick + INVOICE
@@ -564,17 +566,23 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     page.drawRectangle({ x: 0, y: heroBot, width: W, height: heroH, color: P.primary })
     page.drawSvgPath(`M ${W * 0.54} 0 L ${W} 0 L ${W} ${heroH} L ${W * 0.7} ${heroH} Z`, { x: 0, y: H, color: P.accent, opacity: 0.95 })
     page.drawSvgPath('M 0 0 L 132 0 L 0 132 Z', { x: 0, y: H, color: mix(P.primary, rgb(0, 0, 0), 0.22) })
+    // Business name + details lead the block; the logo sits BELOW them (clamped to whatever
+    // room is left above the meta strip) rather than above — see the 'hero' layout for the
+    // same fix and why.
     let ly = H - 52
-    if (logo) {
-      const d = logo.scaleToFit(120, 34)
-      page.drawImage(logo, { x: M, y: H - 28 - d.height, width: d.width, height: d.height })
-      ly = H - 38 - d.height
-    }
     T(input.issuer.name || 'Business', M, ly, 19, bold, P.onPrimary)
     ly -= 15
     for (const l of input.issuer.lines.slice(0, 2)) {
       T(l, M, ly, 8.2, font, mix(rgb(1, 1, 1), P.primary, 0.3))
       ly -= 11
+    }
+    if (logo) {
+      const metaFloor = heroBot + 38 // stay clear of the meta strip along the bottom of the hero
+      const room = ly - 6 - metaFloor
+      if (room >= 14) {
+        const d = logo.scaleToFit(110, Math.min(34, room))
+        page.drawImage(logo, { x: M, y: ly - 6 - d.height, width: d.width, height: d.height })
+      }
     }
     Rt(title, RX, H - 54, 28, bold, rgb(1, 1, 1))
     Rt(input.number, RX, H - 72, 10, bold, rgb(1, 1, 1))
