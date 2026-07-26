@@ -536,6 +536,13 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     Rt(title, RX, H - M - 8, 11, bold, P.accent)
     Rt(input.number, RX, H - M - 23, 8.4, font, P.muted)
     let sy = H - M - 44
+    // Logo goes below the brand bar, pushing the stat panel down to make room — sequential,
+    // so it can never overlap the text above it.
+    if (logo) {
+      const d = logo.scaleToFit(90, 24)
+      page.drawImage(logo, { x: M, y: sy - 6 - d.height, width: d.width, height: d.height })
+      sy -= 6 + d.height + 8
+    }
     // Headline stat panel
     const panelH = 82
     rrect(M, sy, W - 2 * M, panelH, { fill: P.cardFill, fillOpacity: 0.75, border: P.cardLine, r: 16 })
@@ -683,7 +690,15 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
     y = ly - 24
   } else {
     // SWISS minimal
-    const topY = H - M
+    let topY = H - M
+    // Logo sits above the INVOICE label, pushing it (and the number below it) down — the
+    // right-hand meta grid starts independently from the page top, so this can't collide
+    // with it either.
+    if (logo) {
+      const d = logo.scaleToFit(90, 26)
+      page.drawImage(logo, { x: M, y: topY - d.height, width: d.width, height: d.height })
+      topY -= d.height + 14
+    }
     T('INVOICE', M, topY, 9, bold, P.muted)
     T(input.number, M, topY - 22, 26, bold, P.strong)
     // right meta grid
