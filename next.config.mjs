@@ -6,6 +6,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Some hosts report a very high logical CPU count on a resource-constrained/shared
+  // instance (observed: 47 static-generation workers), which raced badly enough to hand a
+  // worker a corrupted React module — every hook call failed with "Cannot read properties
+  // of null (reading 'useState')", on a different page each build. Capping this to 1 makes
+  // static generation single-threaded and fully deterministic; the build is a bit slower,
+  // but it can no longer race.
+  experimental: {
+    cpus: 1,
+  },
   // Convenience aliases → the real auth routes (so /login, /signup, etc. don't 404).
   async redirects() {
     return [
