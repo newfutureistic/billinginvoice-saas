@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { http } from '@/lib/api/http'
 import type { AdminUserDTO } from '@/lib/dto/user.dto'
 
@@ -24,5 +24,14 @@ export function useAdminUsers(params: { page?: number } = {}) {
   return useQuery<Paginated<AdminUserDTO>>({
     queryKey: ['admin', 'users', params],
     queryFn: ({ signal }) => http.get(`/admin/users${suffix}`, { signal }),
+  })
+}
+
+/** Permanently delete a platform user (site admin only). */
+export function useDeleteAdminUser() {
+  const qc = useQueryClient()
+  return useMutation<{ ok: true }, unknown, string>({
+    mutationFn: (userId) => http.del(`/admin/users/${userId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
   })
 }

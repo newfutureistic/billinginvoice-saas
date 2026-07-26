@@ -89,4 +89,13 @@ export class MembershipRepository extends BaseRepository {
       this.db.membership.findMany({ where: { workspaceId, role: 'OWNER' } }),
     )
   }
+
+  /** Active members of a workspace other than `excludeUserId` — used for admin user-deletion's last-owner check. */
+  countOtherActive(workspaceId: string, excludeUserId: string): Promise<number> {
+    return this.run(() =>
+      this.db.membership.count({
+        where: { workspaceId, status: 'ACTIVE', userId: { not: excludeUserId } },
+      }),
+    )
+  }
 }
