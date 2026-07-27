@@ -83,7 +83,6 @@ export const PLANS: Record<PlanId, PlanDef> = {
       'Email invoice',
       'QR payment',
       'Payment tracking',
-      'Blog access',
     ],
   },
   PRO: {
