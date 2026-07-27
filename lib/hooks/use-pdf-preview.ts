@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { InvoiceData } from '@/lib/invoice-types'
+import { toPreviewableInvoice } from '@/lib/invoice-state'
 
 /**
  * Renders the invoice through the real PDF engine and hands back a blob URL to display.
@@ -62,7 +63,7 @@ async function renderToBlobUrl(key: string): Promise<string | null> {
 export function usePdfPreview(invoice: InvoiceData, delay = 800) {
   const [url, setUrl] = useState<string | null>(lastUrl)
   const [status, setStatus] = useState<PdfPreviewStatus>(lastUrl ? 'ready' : 'loading')
-  const key = JSON.stringify(invoice)
+  const key = JSON.stringify(toPreviewableInvoice(invoice))
 
   useEffect(() => {
     let cancelled = false

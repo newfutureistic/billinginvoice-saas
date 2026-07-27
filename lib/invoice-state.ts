@@ -60,6 +60,32 @@ export const EMPTY_BANK_DETAILS: InvoiceData['bankDetails'] = {
   branch: '',
 }
 
+/**
+ * Fill required-but-still-empty fields with light placeholder text so the live PDF preview
+ * has something to render from Step 1 onward, instead of "Preview unavailable" until
+ * business, client, and at least one item description are all filled in. This is
+ * preview-only — it's never sent anywhere except the render used to paint the preview
+ * pane; Download/Export/Save still validate (and require) the real data untouched.
+ */
+export function toPreviewableInvoice(invoice: InvoiceData): InvoiceData {
+  const items = invoice.items.length > 0 ? invoice.items : [EMPTY_ITEM]
+  return {
+    ...invoice,
+    business: {
+      ...invoice.business,
+      businessName: invoice.business.businessName || 'Your Business Name',
+    },
+    client: {
+      ...invoice.client,
+      clientName: invoice.client.clientName || 'Client Name',
+    },
+    items: items.map((item) => ({
+      ...item,
+      description: item.description || 'Item or service description',
+    })),
+  }
+}
+
 export const MOCK_INVOICE: InvoiceData = {
   id: 'inv-001',
   invoiceNumber: 'INV-2024-001',
