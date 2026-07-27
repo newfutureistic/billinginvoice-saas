@@ -2,16 +2,33 @@
 
 import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
+import { http } from '@/lib/api/http'
+import { ApiError } from '@/lib/api/errors'
 
 const topics = ['General question', 'Sales', 'Billing', 'Technical support', 'Partnership']
 
 export function ContactForm() {
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'done'>('idle')
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle')
+  const [error, setError] = useState<string | null>(null)
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setStatus('submitting')
-    setTimeout(() => setStatus('done'), 900)
+    setError(null)
+    const data = new FormData(e.currentTarget)
+    try {
+      await http.post('/contact', {
+        firstName: data.get('firstName'),
+        lastName: data.get('lastName'),
+        email: data.get('email'),
+        topic: data.get('topic'),
+        message: data.get('message'),
+      })
+      setStatus('done')
+    } catch (err) {
+      setStatus('error')
+      setError(err instanceof ApiError ? err.message : 'Could not send your message. Please try again.')
+    }
   }
 
   if (status === 'done') {
@@ -35,18 +52,18 @@ export function ContactForm() {
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="First name" id="firstName">
-          <input {...inputProps} id="firstName" required placeholder="Jane" />
+          <input {...inputProps} id="firstName" name="firstName" required placeholder="Jane" />
         </Field>
         <Field label="Last name" id="lastName">
-          <input {...inputProps} id="lastName" required placeholder="Doe" />
+          <input {...inputProps} id="lastName" name="lastName" required placeholder="Doe" />
         </Field>
       </div>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <Field label="Work email" id="email">
-          <input {...inputProps} id="email" type="email" required placeholder="jane@company.com" />
+          <input {...inputProps} id="email" name="email" type="email" required placeholder="jane@company.com" />
         </Field>
         <Field label="Topic" id="topic">
-          <select {...inputProps} id="topic" defaultValue={topics[0]}>
+          <select {...inputProps} id="topic" name="topic" defaultValue={topics[0]}>
             {topics.map((t) => (
               <option key={t}>{t}</option>
             ))}
@@ -57,6 +74,7 @@ export function ContactForm() {
         <Field label="Message" id="message">
           <textarea
             id="message"
+            name="message"
             required
             rows={5}
             placeholder="How can we help?"
@@ -64,6 +82,11 @@ export function ContactForm() {
           />
         </Field>
       </div>
+      {status === 'error' && error && (
+        <p className="mt-4 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={status === 'submitting'}
