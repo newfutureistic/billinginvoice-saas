@@ -3,6 +3,7 @@
 import { SessionProvider } from 'next-auth/react'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { WorkspaceProvider } from '@/lib/api/workspace-context'
+import { ChunkErrorReload } from '@/components/providers/chunk-error-reload'
 
 /**
  * App-wide client providers: Auth.js `SessionProvider` (real session), React Query
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryProvider>
         <WorkspaceProvider>{children}</WorkspaceProvider>
       </QueryProvider>
+      <ChunkErrorReload />
     </SessionProvider>
   )
 }
