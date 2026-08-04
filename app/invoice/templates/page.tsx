@@ -1,5 +1,13 @@
+import type { Metadata } from 'next'
 import { INVOICE_TEMPLATES } from '@/lib/invoice-templates'
+import { buildMetadata } from '@/lib/seo'
 import Link from 'next/link'
+
+export const metadata: Metadata = buildMetadata({
+  title: 'Invoice Templates — Free Professional Designs',
+  description: 'Choose a professional invoice template — modern, classic, minimal, and more. Free to use, no signup required to start.',
+  path: '/invoice/templates',
+})
 
 export default function TemplatesPage() {
   return (
