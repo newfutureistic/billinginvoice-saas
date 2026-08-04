@@ -340,11 +340,14 @@ export function Step10Preview({
     return false
   }
 
-  async function renderPdfBlob(): Promise<Blob> {
+  /** `logDownload` is only ever passed `true` from the Download button — never View,
+   *  Print, or the live-preview pane — so the site-admin "All Invoices" list reflects
+   *  actual downloads, not every keystroke's debounced preview render. */
+  async function renderPdfBlob(logDownload = false): Promise<Blob> {
     const res = await fetch('/api/v1/invoice/render-pdf', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(invoice),
+      body: JSON.stringify(logDownload ? { ...invoice, logDownload: true } : invoice),
     })
     if (!res.ok) throw new Error('render failed')
     return res.blob()
@@ -383,7 +386,7 @@ export function Step10Preview({
     setBusy('download')
     setNotice(null)
     try {
-      const blob = await renderPdfBlob()
+      const blob = await renderPdfBlob(true)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url

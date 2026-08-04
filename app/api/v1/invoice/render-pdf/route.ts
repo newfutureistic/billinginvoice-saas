@@ -7,6 +7,11 @@ import { amountInWords, resolveInvoiceQr, taxLines } from '@/lib/invoice-format'
 import { validateInvoiceData } from '@/lib/invoice-validation'
 import { templateSpec } from '@/lib/invoice-template-spec'
 import { MAX_LOGO_DATA_URL_CHARS, MAX_SIGNATURE_DATA_URL_CHARS } from '@/lib/validation/formats'
+import { auth } from '@/server/auth'
+import { prisma } from '@/server/db/prisma'
+import { storageService } from '@/server/services/storage.service'
+import { getIntegrationsEnv } from '@/server/config/env'
+import { dbLogger } from '@/server/db/logger'
 import type { Currency } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -107,7 +112,51 @@ const renderSchema = z.object({
   watermark: z.string().max(60).nullish(),
   brandColor: z.string().optional(),
   brandingSection: z.object({ showBrandColor: z.boolean().optional(), showLogo: z.boolean().optional() }).passthrough().optional(),
+  // Set only by the Download button (not View/Print, and never by the live-preview pane's
+  // debounced re-renders) — the signal that this render is worth logging for the
+  // site-admin "All Invoices" list. See `logBuilderDownload` below.
+  logDownload: z.boolean().optional(),
 })
+
+/**
+ * Best-effort activity log for a builder-page (guest or signed-in) download: uploads the
+ * rendered bytes to storage and records a row so the site-admin "All Invoices" list can
+ * show it. Never allowed to fail the actual download — storage may not even be configured
+ * yet (`SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_ANON_KEY` unset), in which case this just
+ * logs a warning and the person still gets their PDF.
+ */
+async function logBuilderDownload(
+  bytes: Uint8Array,
+  meta: { invoiceNumber: string; businessName: string; clientName: string; currency: string; total: number },
+  req: NextRequest,
+): Promise<void> {
+  try {
+    const session = await auth()
+    const userId = session?.user?.id ?? null
+    const id = crypto.randomUUID()
+    const bucket = getIntegrationsEnv().STORAGE_BUCKET
+    const path = `guest-downloads/${id}.pdf`
+    await storageService.upload(bucket, path, bytes, 'application/pdf')
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null
+    await prisma.invoiceDownloadLog.create({
+      data: {
+        id,
+        userId,
+        invoiceNumber: meta.invoiceNumber || null,
+        businessName: meta.businessName || null,
+        clientName: meta.clientName || null,
+        currency: meta.currency || null,
+        total: meta.total,
+        bucket,
+        path,
+        sizeBytes: bytes.byteLength,
+        ip,
+      },
+    })
+  } catch (err) {
+    dbLogger.warn('invoice.download_log_failed', { error: err instanceof Error ? err.message : String(err) })
+  }
+}
 
 function toParty(p: z.infer<typeof partySchema> | undefined, nameKeys: string[]): InvoicePdfParty {
   const obj = (p ?? {}) as Record<string, unknown>
@@ -288,6 +337,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const bytes = await renderInvoicePdf(input)
+    if (data.logDownload) {
+      await logBuilderDownload(
+        bytes,
+        {
+          invoiceNumber: data.invoiceNumber || '',
+          businessName: data.business?.businessName || data.business?.name || '',
+          clientName: data.client?.clientName || data.client?.name || '',
+          currency,
+          total: roundedTotal,
+        },
+        req,
+      )
+    }
     const filename = `${(data.invoiceNumber || 'invoice').replace(/[^A-Za-z0-9._-]/g, '_')}.pdf`
     return new NextResponse(Buffer.from(bytes), {
       status: 200,

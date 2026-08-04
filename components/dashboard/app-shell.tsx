@@ -18,6 +18,7 @@ import {
   Grid3x3,
   Newspaper,
   UserCog,
+  Receipt,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -40,12 +41,13 @@ const adminItems = [
   { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
   { href: '/dashboard/blog', icon: Newspaper, label: 'Blog' },
   { href: '/dashboard/admin/users', icon: UserCog, label: 'All Users' },
+  { href: '/dashboard/admin/invoices', icon: Receipt, label: 'All Invoices' },
   { href: '/dashboard/team', icon: Users, label: 'Team' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
 
 /** Site-global items — only shown to the site-admin allowlist, not every workspace owner. */
-const SITE_ADMIN_ONLY_HREFS = new Set(['/dashboard/blog', '/dashboard/admin/users'])
+const SITE_ADMIN_ONLY_HREFS = new Set(['/dashboard/blog', '/dashboard/admin/users', '/dashboard/admin/invoices'])
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
