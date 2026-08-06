@@ -1150,19 +1150,23 @@ export async function renderInvoicePdf(input: InvoicePdfInput): Promise<Uint8Arr
       y = top - bandH - 12
     }
 
+    // A signature is a small trailing element (one hairline + one label) — it should almost
+    // never be the sole reason an otherwise one-page invoice spills onto an empty second
+    // page. Its footprint is kept tight (26/9 instead of a looser 30/11) and `ensure`
+    // asks for only as much room as it actually draws, not a padded estimate.
     const sigLabel = input.signatureLabel?.trim()
     if (sigImg || sigLabel) {
-      ensure(42)
+      ensure(36)
       const sigW = 200
       const sigL = RX - sigW
       const top = y
       if (sigImg) {
-        const d = sigImg.scaleToFit(sigW - 24, 28)
-        page.drawImage(sigImg, { x: sigL + (sigW - d.width) / 2, y: top - 26, width: d.width, height: d.height })
+        const d = sigImg.scaleToFit(sigW - 24, 24)
+        page.drawImage(sigImg, { x: sigL + (sigW - d.width) / 2, y: top - 22, width: d.width, height: d.height })
       }
-      hline(sigL, RX, top - 30, P.dark ? P.cardLine : mix(P.ink, rgb(1, 1, 1), 0.5), 0.8)
-      Ct(sigLabel || 'Authorized Signatory', sigL + sigW / 2, top - 41, 7.8, font, P.muted)
-      y = top - 48
+      hline(sigL, RX, top - 26, P.dark ? P.cardLine : mix(P.ink, rgb(1, 1, 1), 0.5), 0.8)
+      Ct(sigLabel || 'Authorized Signatory', sigL + sigW / 2, top - 36, 7.8, font, P.muted)
+      y = top - 42
     }
   }
 
