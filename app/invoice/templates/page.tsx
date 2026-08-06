@@ -28,7 +28,7 @@ export default function TemplatesPage() {
           {INVOICE_TEMPLATES.map((template) => (
             <Link
               key={template.id}
-              href="/invoice/new"
+              href={`/invoice/new?template=${template.id}`}
               className="group p-6 rounded-lg border-2 border-border hover:border-brand hover:bg-brand/5 transition-all"
             >
               <div

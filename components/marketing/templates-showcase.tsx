@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { templates } from '@/lib/marketing-content'
 
 function TemplateThumb({ accent, variant }: { accent: string; variant: number }) {
@@ -63,15 +64,15 @@ export function TemplatesShowcase() {
 
         <div className="mt-12 grid grid-cols-2 gap-5 lg:grid-cols-4">
           {templates.map((t, i) => (
-            <div key={t.name} className="group">
-              <div className="transition-transform duration-300 group-hover:-translate-y-1">
+            <Link key={t.name} href={`/invoice/new?template=${t.templateId}`} className="group focus-visible:outline-none">
+              <div className="rounded-lg transition-transform duration-300 group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-ring/50">
                 <TemplateThumb accent={t.accent} variant={i} />
               </div>
               <div className="mt-4">
-                <h3 className="text-sm font-semibold text-foreground">{t.name}</h3>
+                <h3 className="text-sm font-semibold text-foreground group-hover:text-brand transition-colors">{t.name}</h3>
                 <p className="text-sm text-muted-foreground">{t.style}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

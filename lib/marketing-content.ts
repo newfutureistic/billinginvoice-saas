@@ -133,11 +133,13 @@ export const templates: {
   name: string
   style: string
   accent: string
+  /** Real builder template id (`lib/invoice-templates.ts`) this card opens the builder on. */
+  templateId: string
 }[] = [
-  { name: 'Classic', style: 'Timeless and clean', accent: 'oklch(0.545 0.152 258)' },
-  { name: 'Minimal', style: 'Whitespace-forward', accent: 'oklch(0.26 0.017 268)' },
-  { name: 'Modern', style: 'Bold and confident', accent: 'oklch(0.58 0.12 158)' },
-  { name: 'Corporate', style: 'Formal and structured', accent: 'oklch(0.72 0.135 74)' },
+  { name: 'Classic', style: 'Timeless and clean', accent: 'oklch(0.545 0.152 258)', templateId: 'classic' },
+  { name: 'Minimal', style: 'Whitespace-forward', accent: 'oklch(0.26 0.017 268)', templateId: 'minimal' },
+  { name: 'Modern', style: 'Bold and confident', accent: 'oklch(0.58 0.12 158)', templateId: 'modern' },
+  { name: 'Corporate', style: 'Formal and structured', accent: 'oklch(0.72 0.135 74)', templateId: 'corporate' },
 ]
 
 export const plans: {

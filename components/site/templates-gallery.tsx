@@ -12,18 +12,20 @@ export type Template = {
   accent: string
   variant: number
   badge?: string
+  /** Real builder template id (`lib/invoice-templates.ts`) this card starts the builder on. */
+  templateId: string
 }
 
 const templates: Template[] = [
-  { name: 'Classic Invoice', style: 'Timeless and clean', type: 'Invoices', accent: 'oklch(0.545 0.152 258)', variant: 0, badge: 'Popular' },
-  { name: 'Minimal Invoice', style: 'Whitespace-forward', type: 'Invoices', accent: 'oklch(0.26 0.017 268)', variant: 1 },
-  { name: 'Modern Invoice', style: 'Bold and confident', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2 },
-  { name: 'Corporate Invoice', style: 'Formal and structured', type: 'Invoices', accent: 'oklch(0.72 0.135 74)', variant: 0 },
-  { name: 'GST Invoice', style: 'Tax-ready with HSN/SAC', type: 'Invoices', accent: 'oklch(0.545 0.152 258)', variant: 1, badge: 'New' },
-  { name: 'Freelancer Invoice', style: 'Simple and fast', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2 },
-  { name: 'Service Receipt', style: 'Clean confirmation', type: 'Receipts', accent: 'oklch(0.58 0.12 158)', variant: 1 },
-  { name: 'Retail Receipt', style: 'Compact and itemized', type: 'Receipts', accent: 'oklch(0.72 0.135 74)', variant: 0 },
-  { name: 'Payment Receipt', style: 'Proof of payment', type: 'Receipts', accent: 'oklch(0.26 0.017 268)', variant: 2 },
+  { name: 'Classic Invoice', style: 'Timeless and clean', type: 'Invoices', accent: 'oklch(0.545 0.152 258)', variant: 0, badge: 'Popular', templateId: 'classic' },
+  { name: 'Minimal Invoice', style: 'Whitespace-forward', type: 'Invoices', accent: 'oklch(0.26 0.017 268)', variant: 1, templateId: 'minimal' },
+  { name: 'Modern Invoice', style: 'Bold and confident', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2, templateId: 'modern' },
+  { name: 'Corporate Invoice', style: 'Formal and structured', type: 'Invoices', accent: 'oklch(0.72 0.135 74)', variant: 0, templateId: 'corporate' },
+  { name: 'GST Invoice', style: 'Tax-ready with HSN/SAC', type: 'Invoices', accent: 'oklch(0.545 0.152 258)', variant: 1, badge: 'New', templateId: 'classic' },
+  { name: 'Freelancer Invoice', style: 'Simple and fast', type: 'Invoices', accent: 'oklch(0.58 0.12 158)', variant: 2, templateId: 'minimal' },
+  { name: 'Service Receipt', style: 'Clean confirmation', type: 'Receipts', accent: 'oklch(0.58 0.12 158)', variant: 1, templateId: 'modern' },
+  { name: 'Retail Receipt', style: 'Compact and itemized', type: 'Receipts', accent: 'oklch(0.72 0.135 74)', variant: 0, templateId: 'corporate' },
+  { name: 'Payment Receipt', style: 'Proof of payment', type: 'Receipts', accent: 'oklch(0.26 0.017 268)', variant: 2, templateId: 'elegant' },
 ]
 
 const types = ['All', 'Invoices', 'Receipts']
@@ -99,7 +101,7 @@ export function TemplatesGallery() {
         {filtered.map((t) => (
           <Link
             key={t.name}
-            href="/invoice/new"
+            href={`/invoice/new?template=${t.templateId}`}
             className="group focus-visible:outline-none"
           >
             <div className="relative transition-transform duration-300 group-hover:-translate-y-1">

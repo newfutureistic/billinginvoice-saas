@@ -27,7 +27,7 @@ interface InvoiceHistory {
  * structural defaults (template, brandColor, the invoiceNumber sentinel check) still rely
  * on the full sample data.
  */
-function newInvoiceDefault(): InvoiceData {
+export function newInvoiceDefault(): InvoiceData {
   return {
     ...MOCK_INVOICE,
     business: EMPTY_BUSINESS,
