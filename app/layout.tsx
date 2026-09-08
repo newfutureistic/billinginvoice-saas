@@ -1,9 +1,12 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import Script from 'next/script'
 import { Providers } from '@/components/providers'
 import { SITE } from '@/lib/seo'
 import './globals.css'
+
+const GA_MEASUREMENT_ID = 'G-HYG2FHHY07'
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -82,7 +85,20 @@ export default function RootLayout({
             workspace). They render children unchanged — no DOM, no styling — so the
             served HTML and every pixel are identical to before. */}
         <Providers>{children}</Providers>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   )
